@@ -61,6 +61,14 @@ All stories must have appropriate test evidence before they can be marked Done:
 - No merge if tests fail — tests are a blocking gate in CI
 - Never disable or skip failing tests to make CI pass — fix the underlying issue
 - Engine-specific CI commands:
-  - **Godot**: `godot --headless --script tests/gdunit4_runner.gd`
+  - **Godot**: `godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs=true -gexit`
+    (GUT, per `technical-preferences.md` — this line previously named gdUnit4,
+    a contradiction never resolved; GUT is the project's committed framework,
+    corrected 2026-08-09. `-ginclude_subdirs=true` added 2026-08-11 — `-gdir`
+    alone does not scan subdirectories, and `tests/README.md`'s own layout
+    nests tests by system; the original command would have silently found
+    zero tests in any per-system subfolder. GUT itself is not checked into
+    this repo — CI installs it fresh each run, pinned to v9.7.1, the first
+    release with Godot 4.7 compatibility fixes; see `.github/workflows/tests.yml`)
   - **Unity**: `game-ci/unity-test-runner@v4` (GitHub Actions)
   - **Unreal**: headless runner with `-nullrhi` flag

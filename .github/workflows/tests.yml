@@ -1,0 +1,49 @@
+name: Automated Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run GUT Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.1
+
+      - name: Install GUT
+        # GUT is deliberately not checked into this repo (see tests/README.md) —
+        # install it fresh each CI run instead. Pinned to v9.7.1, the first
+        # release with explicit Godot 4.7 compatibility fixes (return-type
+        # checking change). Bump this tag if GUT cuts a newer 4.7.x-verified
+        # release; don't float on a branch — CI must be reproducible.
+        run: |
+          git clone --depth 1 --branch v9.7.1 https://github.com/bitwes/Gut.git /tmp/gut
+          mkdir -p addons
+          cp -r /tmp/gut/addons/gut addons/gut
+
+      - name: Run GUT Tests
+        # -ginclude_subdirs is required: -gdir alone does not scan
+        # subdirectories, and tests/README.md's own documented layout
+        # (tests/unit/[system]/, tests/integration/[system]/) is nested by
+        # system. Without this flag the original command would silently
+        # discover zero tests in any per-system subfolder.
+        run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs=true -gexit
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: reports/
