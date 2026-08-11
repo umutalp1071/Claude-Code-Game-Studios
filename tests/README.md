@@ -43,8 +43,13 @@ godot --headless --import
 Then run the suite:
 
 ```
-godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs=true -gexit
+godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs=true -gprefix= -gsuffix=_test.gd -gexit
 ```
+
+`-gprefix=`/`-gsuffix=_test.gd` are required: GUT's own default file match
+is prefix `test_` + suffix `.gd` (i.e. `test_*.gd`), not the
+`[system]_[feature]_test.gd` convention documented above. Without these
+flags GUT starts fine but silently matches zero files.
 
 `-ginclude_subdirs=true` is required — `-gdir` alone does not scan
 subdirectories, and this file's own directory layout above nests tests by

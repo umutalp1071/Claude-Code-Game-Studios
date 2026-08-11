@@ -61,14 +61,20 @@ All stories must have appropriate test evidence before they can be marked Done:
 - No merge if tests fail — tests are a blocking gate in CI
 - Never disable or skip failing tests to make CI pass — fix the underlying issue
 - Engine-specific CI commands:
-  - **Godot**: `godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs=true -gexit`
+  - **Godot**: `godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs=true -gprefix= -gsuffix=_test.gd -gexit`
     (GUT, per `technical-preferences.md` — this line previously named gdUnit4,
     a contradiction never resolved; GUT is the project's committed framework,
-    corrected 2026-08-09. `-ginclude_subdirs=true` added 2026-08-11 — `-gdir`
-    alone does not scan subdirectories, and `tests/README.md`'s own layout
-    nests tests by system; the original command would have silently found
-    zero tests in any per-system subfolder. GUT itself is not checked into
-    this repo — CI installs it fresh each run, pinned to v9.7.1, the first
-    release with Godot 4.7 compatibility fixes; see `.github/workflows/tests.yml`)
+    corrected 2026-08-09. Fixed twice more on 2026-08-11, both found only by
+    actually running CI, not by reading GUT's docs: (1) `-ginclude_subdirs=true`
+    — `-gdir` alone does not scan subdirectories, and `tests/README.md`'s own
+    layout nests tests by system; (2) `-gprefix= -gsuffix=_test.gd` — GUT's
+    own default file match is `test_*.gd`, not this project's documented
+    `[system]_[feature]_test.gd` suffix convention; without the override GUT
+    starts cleanly and reports "success" while silently matching zero files.
+    Also: a fresh checkout needs `godot --headless --import` before this
+    command runs at all, or GUT's own class_names aren't registered yet.
+    GUT itself is not checked into this repo — CI installs it fresh each
+    run, pinned to v9.7.1, the first release with Godot 4.7 compatibility
+    fixes; see `.github/workflows/tests.yml`)
   - **Unity**: `game-ci/unity-test-runner@v4` (GitHub Actions)
   - **Unreal**: headless runner with `-nullrhi` flag
