@@ -31,6 +31,17 @@ CI installs GUT fresh on every run instead (see `.github/workflows/tests.yml`)
 
 ## Running Tests
 
+On a fresh checkout (no `.godot/` import cache yet — e.g. right after
+installing GUT, or in CI), import the project once first, or GUT's own
+`class_name` declarations won't be registered and `gut_cmdln.gd` fails at
+startup with "Some GUT class_names have not been imported":
+
+```
+godot --headless --import
+```
+
+Then run the suite:
+
 ```
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs=true -gexit
 ```

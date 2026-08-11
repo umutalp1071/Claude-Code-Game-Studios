@@ -33,6 +33,15 @@ jobs:
           mkdir -p addons
           cp -r /tmp/gut/addons/gut addons/gut
 
+      - name: Import project
+        # A fresh checkout has no .godot/ import cache, so no class_name
+        # (including GUT's own: GutTest, GutMain, etc.) is registered yet.
+        # Without this, gut_cmdln.gd fails at _init() with "Some GUT
+        # class_names have not been imported" and exits before running any
+        # test -- discovered via an actual CI run on 2026-08-11: the job
+        # reported success (exit 0) despite zero tests executing.
+        run: godot --headless --import
+
       - name: Run GUT Tests
         # -ginclude_subdirs is required: -gdir alone does not scan
         # subdirectories, and tests/README.md's own documented layout
