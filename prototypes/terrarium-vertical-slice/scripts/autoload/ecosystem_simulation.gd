@@ -162,7 +162,7 @@ func advance_tick() -> void:
 
 	# Creatures read the state every other creature had at tick START — Core
 	# Rule 11 — so creature evaluation order never changes the outcome.
-	var snail_present_at_tick_start := _creatures.has("snail") and _creatures["snail"].state == CreatureState.Presence.PRESENT
+	var snail_present_at_tick_start: bool = _creatures.has("snail") and _creatures["snail"].state == CreatureState.Presence.PRESENT
 	for id in _creatures:
 		var c: CreatureState = _creatures[id]
 		var condition_met := false
