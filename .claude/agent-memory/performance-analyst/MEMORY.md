@@ -1,0 +1,1 @@
+- [Discovery Surfacing / Diorama Rendering cue-count drift](project_discovery-surfacing-diorama-sync.md) — stale 2-3 vs corrected 5 concurrent-cue figure, unverified downstream budget claim

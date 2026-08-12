@@ -1,8 +1,25 @@
 # Godot — Breaking Changes
 
-Last verified: 2026-02-12
+Last verified: 2026-08-02
 
 Changes between Godot versions, focused on post-LLM-cutoff changes (4.4+).
+
+## 4.6 → 4.7 (July 2026 — POST-CUTOFF, HIGH RISK)
+
+| Subsystem | Change | Details |
+|-----------|--------|---------|
+| Input | Mouse/keyboard device IDs changed | Was `0`; now `InputEvent.DEVICE_ID_MOUSE` / `InputEvent.DEVICE_ID_KEYBOARD` constants. Compare against these, not `0`. Relevant to this project's mouse+touch control scheme. |
+| Core | `Object.is_class()` parameter type | Changed `String` → `StringName` |
+| Rendering | LinearToSRGB shader no longer clamps | On Mobile/Forward+ renderers, output can now exceed `[0.0, 1.0]` |
+| Rendering | `CanvasItem` line antialiasing removed | Lines render thinner than 4.6 by default |
+| Rendering | Shader preprocessor restrictions tightened | Some macro patterns that compiled in 4.6 no longer do |
+| Physics (Jolt) | `WorldBoundaryShape3D` plane distance sign reversed | Flip sign values manually when porting scenes |
+| Physics (Jolt) | `SoftBody3D` default mass changed | `0` (auto-calculated) → `1` kg; `linear_stiffness` behavior changed — re-tune if used |
+| Physics (Jolt) | `Area3D` now reports `SoftBody3D` overlaps | Previously not reported; adjust collision layers/masks if unwanted |
+| Audio | `AudioStreamPlayer.area_mask` default changed | `1` → `0` (disabled) — reset to `1` if relying on audio bus overrides |
+| Audio | `AudioEffectSpectrumAnalyzer.tap_back_pos` removed | Property removed entirely |
+| GDScript | Packed array element assignment | No longer calls the setter for the whole packed-array property |
+| GDScript | Inherited typed-return methods | Now require an explicit `return null` — implicit fallthrough errors |
 
 ## 4.5 → 4.6 (Jan 2026 — POST-CUTOFF, HIGH RISK)
 

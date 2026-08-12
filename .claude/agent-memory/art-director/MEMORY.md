@@ -1,0 +1,1 @@
+- [Terrarium Visual Direction](project_terrarium_visual_direction.md) — where Terrarium's visual decisions already live across GDDs pre-art-bible, and what's correctly deferred to Technical Setup.

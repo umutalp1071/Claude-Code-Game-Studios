@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: ""
+last_updated: "2026-08-09" # N_departure_ticks retuned 5->25 (tuning pass), CONDITION_STREAK_MAX recomputed 5->25 to match, D_water/WATERING_SWELL_DURATION newly registered (cross-GDD review finding); previously 2026-08-05 (diorama-rendering.md added as referenced_by for Fern, day_night_phase, its own /design-review, systems-designer finding)
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -48,7 +48,82 @@ last_updated: ""
 # Attribute fields: any key stats that could appear in another GDD
 #   (health, damage, drops, faction, etc.)
 
-entities: []
+entities:
+  - name: Moss
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    moisture_tolerance_min: 40
+    moisture_tolerance_max: 75
+    growth_rate: 1
+    decay_rate: 2
+    max_stage: 4
+    light_tolerance_min: 20
+    light_tolerance_max: 60
+    added: 2026-08-03
+    revised: "2026-08-03 (added light_tolerance_min/max, source:
+      ecosystem-simulation.md /design-review — light_level mechanic added to
+      fix the moisture-only lockstep collapse)"
+
+  - name: Fern
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+      - design/gdd/diorama-rendering.md
+    moisture_tolerance_min: 55
+    moisture_tolerance_max: 90
+    growth_rate: 1
+    decay_rate: 1
+    max_stage: 6
+    light_tolerance_min: 40
+    light_tolerance_max: 80
+    added: 2026-08-03
+    revised: "2026-08-03 (added light_tolerance_min/max, source:
+      ecosystem-simulation.md /design-review — light_level mechanic added to
+      fix the moisture-only lockstep collapse)"
+
+  - name: Flower
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    moisture_tolerance_min: 60
+    moisture_tolerance_max: 90
+    growth_rate: 2
+    decay_rate: 1
+    max_stage: 3
+    light_tolerance_min: 55
+    light_tolerance_max: 95
+    added: 2026-08-03
+    revised: "2026-08-03 (/design-review: decay_rate 4->1 and moisture_tolerance_min
+      65->60 — old values one-tick-wiped growth_stage on any decay tick,
+      violating the NOT-punishing anti-pillar, source: ecosystem-simulation.md
+      re-review, creative-director ruling; added light_tolerance_min/max as
+      part of the same pass's light_level mechanic, see below)"
+
+  - name: Snail
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+      - design/gdd/creature-behavior.md
+    spawn_conditions: "moss.growth_stage + fern.growth_stage >= 6"
+    movement_speed: 6
+    added: 2026-08-03
+    revised: "2026-08-03 (added movement_speed, source: creature-behavior.md)"
+
+  - name: Moth
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+      - design/gdd/creature-behavior.md
+    spawn_conditions: "flower.growth_stage == max_stage AND snail.state == PRESENT"
+    movement_speed: 14
+    added: 2026-08-03
+    revised: "2026-08-03 (added movement_speed, source: creature-behavior.md)"
 
 # Example (remove when first real entry is added):
 #
@@ -106,7 +181,260 @@ items: []
 #   output_range[min, max], added
 # Optional: expression (the actual formula), notes
 
-formulas: []
+formulas:
+  - name: definition_validity
+    status: active
+    source: design/gdd/content-data.md
+    referenced_by:
+      - design/gdd/content-data.md
+    variables:
+      - moisture_tolerance_min
+      - moisture_tolerance_max
+      - light_tolerance_min
+      - light_tolerance_max
+      - footprint_size
+      - movement_speed
+      - pause_duration_min
+      - pause_duration_max
+      - growth_rate
+      - decay_rate
+      - growth_pattern
+    output_range: [false, true]
+    expression: "SHAPE ONLY, NOT PER-TYPE-SCOPED — see notes: below. (0 <= moisture_tolerance_min < moisture_tolerance_max <= 100) AND (moisture_tolerance_max - moisture_tolerance_min >= 15) AND (0 <= light_tolerance_min < light_tolerance_max <= 100) AND (light_tolerance_max - light_tolerance_min >= 15) AND (0 < footprint_size <= 20) AND (0 <= movement_speed <= 50) AND (0 <= pause_duration_min <= pause_duration_max <= 30) AND (0 <= growth_rate <= 10) AND (0 <= decay_rate <= 10) AND (growth_pattern in {carpet, clump, climb})"
+    notes: "Load-time validity check for PlantTypeDef/CreatureTypeDef/ObjectTypeDef.
+      A definition failing this check is excluded from the registry at load,
+      never crashes startup. moisture_tolerance is an int on the same 0-100
+      scale as jar_moisture (ecosystem-simulation.md) — not 0.0-1.0. Each
+      definition is checked only against the clauses whose fields exist on
+      its own type (e.g. a CreatureTypeDef is never evaluated against
+      footprint_size or the moisture/growth/decay/growth_pattern clauses) —
+      the shared expression is one formula shape, not one check applied to
+      every field regardless of type. See content-data.md Edge Cases and
+      Formulas."
+    added: 2026-08-03
+    revised: "2026-08-03 (rescaled moisture_tolerance from 0.0-1.0 float to
+      0-100 int and added band-width/footprint/speed bounds, source:
+      content-data.md re-review); 2026-08-03 (added growth_rate/decay_rate
+      bounds via new RATE_MAX constant and growth_pattern enum-membership
+      clause, source: content-data.md re-review — this entry had fallen out
+      of sync with content-data.md's Formulas section until caught in a
+      later /design-review pass); 2026-08-03 (added pause_duration_min/max
+      bounds via new PAUSE_DURATION_MAX constant, source: content-data.md
+      /design-review — new CreatureTypeDef field added to close the Pillar 4
+      creature-variety gap; creature-behavior.md still needs a companion
+      edit to consume it, tracked in content-data.md Open Questions)"
+
+  - name: drag_active
+    status: active
+    source: design/gdd/input-abstraction.md
+    referenced_by:
+      - design/gdd/input-abstraction.md
+    variables:
+      - press_pos
+      - current_pos
+      - threshold_mouse
+      - threshold_touch
+      - device_id
+    output_range: [false, true]
+    expression: "distance(press_pos, current_pos) > threshold[device_id]"
+    notes: "Classifies a pointer gesture as tap vs drag. Strict > (not >=) —
+      distance exactly equal to threshold stays a tap. See input-abstraction.md
+      Acceptance Criteria #2. press_pos/current_pos are post-stretch logical
+      space (get_viewport().get_mouse_position()), not raw window pixels."
+    added: 2026-08-03
+    revised: "2026-08-03 (added device_id to variables list — it was used in
+      the expression but missing from the table, source: input-abstraction.md
+      /design-review)"
+
+  - name: placement_validity
+    status: active
+    source: design/gdd/object-placement.md
+    referenced_by:
+      - design/gdd/object-placement.md
+    variables:
+      - px
+      - py
+      - cx
+      - cy
+      - rx
+      - ry
+      - fp
+      - fp_a
+      - fp_b
+      - LENIENCY
+    output_range: [false, true]
+    expression: "in_bounds AND no_overlap, where in_bounds = ((px-cx)/(rx-fp))^2 + ((py-cy)/(ry-fp))^2 <= 1, no_overlap = dist(pa,pb) >= (fp_a+fp_b) * LENIENCY"
+    notes: "Validates a drag-release position for Object Placement. Both
+      boundary comparisons are inclusive (<=, >=) — favors the player per
+      the Anti-Pillar against punishing mechanics. footprint_size (fp) is a
+      float radius in jar-space units, shared definition with content-data.md."
+    added: 2026-08-03
+    revised: ""
+
+  - name: jar_moisture_tick
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    variables:
+      - jar_moisture
+      - moisture_decay_rate
+      - watering_amount
+      - watered
+    output_range: [0, 100]
+    expression: "clamp(jar_moisture - moisture_decay_rate + (watered ? watering_amount : 0), 0, 100)"
+    notes: "Global jar-wide moisture update, run once per tick. Anchored to
+      the terrarium-concept prototype's validated values (decay=3, water=+25).
+      Type: int, 0-100 scale (2026-08-03 /design-review: made explicit here
+      after persistence-save.md's save_blob_validity check was found typed
+      as float — corrected there to match this int type, the source of
+      truth)."
+    added: 2026-08-03
+    revised: "2026-08-03 (notes: clarified int type, source:
+      ecosystem-simulation.md /design-review — fixes a type-drift finding
+      against persistence-save.md)"
+
+  - name: light_level_tick
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    variables:
+      - light_level
+      - light_direction
+      - LIGHT_STEP_PER_TICK
+    output_range: [0, 100]
+    expression: "light_level' = clamp(light_level + light_direction * LIGHT_STEP_PER_TICK, 0, 100); light_direction flips sign whenever the clamp triggers (hits 0 or 100), otherwise unchanged"
+    notes: "Global jar-wide light update, run once per tick alongside
+      jar_moisture — a second variable independent of player action (no
+      watering-equivalent input exists for light), added 2026-08-03
+      /design-review to fix Core Rule 8's moisture-only possibility-space
+      collapse (game-designer + systems-designer findings: one shared
+      scalar can't produce depth, and the original staggered moisture bands
+      mathematically collapsed to a lockstep zone at moisture in [65,75]).
+      Deterministic triangle-wave, not randomized (creative-director
+      explicitly rejected RNG here — would reintroduce the 'random, can't
+      tell why' failure mode). Distinct from and unrelated to Time & Drift's
+      cosmetic day_night_phase (that stays presentation-only, zero gameplay
+      effect, per that GDD's own Core Rule 7 — untouched by this change)."
+    added: 2026-08-03
+    revised: ""
+
+  - name: growth_stage_delta
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    variables:
+      - growth_stage
+      - growth_rate
+      - decay_rate
+      - max_stage
+      - jar_moisture
+      - moisture_tolerance_min
+      - moisture_tolerance_max
+      - light_level
+      - light_tolerance_min
+      - light_tolerance_max
+    output_range: [0, "max_stage"]
+    expression: "three-state, not a single clamp expression (revised 2026-08-04 round 12): moisture_ok = jar_moisture in [moisture_tolerance_min, moisture_tolerance_max]; light_ok = light_level in [light_tolerance_min, light_tolerance_max]. If moisture_ok AND light_ok: clamp(growth_stage + growth_rate, 0, max_stage) [GROWING]. If moisture_ok AND NOT light_ok: growth_stage unchanged [STALLED]. If NOT moisture_ok: clamp(growth_stage - decay_rate, 0, max_stage) [DECAYING, regardless of light_ok]."
+    notes: "Per-plant-instance growth/decay update, run once per tick per
+      plant. Both range checks are inclusive on both bounds. Light clause
+      added 2026-08-03 /design-review (see light_level_tick above) —
+      previously moisture-only, was a binary AND-gate (single in_range bool)
+      through round 11. Revised 2026-08-04 round 12: light failing alone now
+      STALLS growth instead of decaying it — tracing a full 40-tick
+      light_level cycle showed the prior binary formula decay-biased 2 of 3
+      MVP plant types (Moss, Fern) even under flawless player moisture care,
+      an Anti-Pillar violation. Only moisture failing still decays, regardless
+      of light. See ecosystem-simulation.md's round-12 review note for the
+      full trace."
+    added: 2026-08-03
+    revised: "2026-08-04 (round 12: three-state grow/stall/decay redesign,
+      source: ecosystem-simulation.md /design-review)"
+
+  - name: ticks_to_apply
+    status: active
+    source: design/gdd/time-drift.md
+    referenced_by:
+      - design/gdd/time-drift.md
+    variables:
+      - elapsed_seconds
+      - seconds_per_tick
+      - max_catchup_ticks
+    output_range: [0, 84]
+    expression: "min(floor(elapsed_seconds / seconds_per_tick), max_catchup_ticks)"
+    notes: "Converts real elapsed time since last_visit_timestamp into a
+      batch tick count, applied atomically to EcosystemSimulation.advance_tick()
+      at session start. Calibrated against Ecosystem Simulation's locked
+      growth/decay rates — see time-drift.md Formulas for the full
+      calibration reasoning and its honest dormancy-convergence limitation."
+    added: 2026-08-03
+    revised: ""
+
+  - name: day_night_phase
+    status: active
+    source: design/gdd/time-drift.md
+    referenced_by:
+      - design/gdd/time-drift.md
+      - design/gdd/diorama-rendering.md
+    variables:
+      - session_elapsed_seconds
+      - cycle_duration_seconds
+    output_range: [0.0, 1.0]
+    expression: "(session_elapsed_seconds mod cycle_duration_seconds) / cycle_duration_seconds"
+    notes: "Purely cosmetic day/night lighting phase, zero gameplay effect.
+      Decoupled from ecosystem ticks by design."
+    added: 2026-08-03
+    revised: ""
+
+  - name: save_blob_validity
+    status: active
+    source: design/gdd/persistence-save.md
+    referenced_by:
+      - design/gdd/persistence-save.md
+    variables:
+      - schema_version
+      - jar_moisture
+      - light_level
+      - light_direction
+      - growth_stage
+      - optimal_hold_ticks
+      - state
+      - condition_streak_ticks
+      - object_position
+      - creature_position
+    output_range: [false, true]
+    expression: "(schema_version == CURRENT_SCHEMA_VERSION) AND (0<=jar_moisture<=100) AND (0<=light_level<=100) AND (light_direction in {-1, +1}) AND (forall plant: 0<=growth_stage<=plant_type.max_stage) AND (forall plant: 0<=optimal_hold_ticks<=OPTIMAL_HOLD_TICKS_MAX) AND (forall creature: state in {PRESENT, ABSENT}) AND (forall creature: 0<=condition_streak_ticks<=CONDITION_STREAK_MAX) AND (position present when state==PRESENT) AND (forall creature where state==PRESENT: creature_position in_bounds per object-placement.md's ellipse check, fp=0) AND (forall type_id referenced: type_id exists in Content Data registry) AND (object_position in_bounds per object-placement.md's ellipse check)"
+    notes: "Gates whether a loaded save blob is restored at all. On false,
+      the entire blob is discarded (never partial restore) and all systems
+      default-initialize, same as the first-session case. Mirrors
+      content-data.md's definition_validity pattern. last_visit_timestamp is
+      deliberately NOT gated here — time-drift.md's own Edge Cases already
+      sanitize an invalid/future timestamp by resetting to 'first session'
+      behavior without discarding jar_moisture/growth_stage, which is more
+      precise than an all-or-nothing blob discard would be. optimal_hold_ticks
+      and condition_streak_ticks (2026-08-04) are per-instance Ecosystem
+      Simulation state added under persistence-save.md's new Core Rule 1
+      blob-completeness principle, not one-off patches — see that GDD's
+      round-11 review note. creature_position reuses object-placement.md's
+      in_bounds check with fp=0, mirroring creature-behavior.md's own reuse
+      of the same formula for destination sampling."
+    added: 2026-08-03
+    revised: "2026-08-04 (/design-review on persistence-save.md,
+      ecosystem-simulation.md, content-data.md, object-placement.md as a set:
+      added light_level/light_direction clauses — persistence-save.md's own
+      formula gained these 2026-08-03 but this registry entry was never
+      updated, a drift caught by systems-designer; added type_id-reference
+      and object_position in_bounds clauses — qa-lead and systems-designer
+      independently found the formula didn't gate two things Core Rule 1
+      says are saved, despite Edge Cases/AC8 already claiming the type_id
+      check existed); 2026-08-04 round 11 (added optimal_hold_ticks,
+      condition_streak_ticks, and creature_position/creature_in_bounds
+      clauses — game-designer, systems-designer, and qa-lead independently
+      found these three fields were carried-across-tick-boundary state or
+      an unchecked position with no blob field/validity clause/AC, source:
+      persistence-save.md round-11 /design-review)"
 
 # Example:
 #
@@ -139,7 +467,322 @@ formulas: []
 #
 # Required fields: name, status, source, referenced_by, value, unit, added
 
-constants: []
+constants:
+  - name: threshold_mouse
+    status: active
+    source: design/gdd/input-abstraction.md
+    referenced_by:
+      - design/gdd/input-abstraction.md
+    value: 8
+    unit: logical_pixels
+    added: 2026-08-03
+    revised: ""
+
+  - name: threshold_touch
+    status: active
+    source: design/gdd/input-abstraction.md
+    referenced_by:
+      - design/gdd/input-abstraction.md
+    value: 16
+    unit: logical_pixels
+    added: 2026-08-03
+    revised: ""
+
+  - name: LENIENCY
+    status: active
+    source: design/gdd/object-placement.md
+    referenced_by:
+      - design/gdd/object-placement.md
+    value: 0.8
+    unit: ratio (0.7-0.9 safe range)
+    added: 2026-08-03
+    revised: ""
+
+  - name: moisture_decay_rate
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    value: 3
+    unit: moisture_units_per_tick
+    added: 2026-08-03
+    revised: ""
+
+  - name: watering_amount
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    value: 25
+    unit: moisture_units
+    added: 2026-08-03
+    revised: ""
+
+  - name: N_spawn_ticks
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    value: 3
+    unit: ticks
+    added: 2026-08-03
+    revised: ""
+
+  - name: N_departure_ticks
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+      - design/gdd/persistence-save.md
+    value: 25
+    unit: ticks
+    added: 2026-08-03
+    revised: "2026-08-09 — retuned 5->25 via the required pre-implementation
+      tuning pass (safe range 10-30, widened from 4-8 on 2026-08-05); see
+      ecosystem-simulation.md Open Questions for the full trace"
+
+  - name: p_detail
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    value: 0.05
+    unit: probability_per_tick
+    added: 2026-08-03
+    revised: ""
+
+  - name: optimal_hold_ticks_threshold
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    value: 6
+    unit: ticks
+    added: 2026-08-03
+    revised: "2026-08-04 (round 12 /design-review: lowered 10->6 — at the
+      documented LIGHT_STEP_PER_TICK=5 default, the longest possible
+      contiguous GROWING streak for any MVP plant's width-40 light band is
+      9 ticks, so the old threshold of 10 was mathematically unreachable
+      for all 3 MVP plant types)"
+
+  - name: seconds_per_tick
+    status: active
+    source: design/gdd/time-drift.md
+    referenced_by:
+      - design/gdd/time-drift.md
+    value: 7200
+    unit: real_seconds_per_tick
+    added: 2026-08-03
+    revised: ""
+
+  - name: max_catchup_ticks
+    status: active
+    source: design/gdd/time-drift.md
+    referenced_by:
+      - design/gdd/time-drift.md
+    value: 84
+    unit: ticks
+    added: 2026-08-03
+    revised: ""
+
+  - name: cycle_duration_seconds
+    status: active
+    source: design/gdd/time-drift.md
+    referenced_by:
+      - design/gdd/time-drift.md
+    value: 1200
+    unit: real_seconds
+    added: 2026-08-03
+    revised: ""
+
+  - name: CREATURE_CLEARANCE
+    status: active
+    source: design/gdd/creature-behavior.md
+    referenced_by:
+      - design/gdd/creature-behavior.md
+    value: 4
+    unit: jar_space_units
+    added: 2026-08-03
+    revised: ""
+
+  - name: MAX_SAMPLE_ATTEMPTS
+    status: active
+    source: design/gdd/creature-behavior.md
+    referenced_by:
+      - design/gdd/creature-behavior.md
+    value: 20
+    unit: attempts
+    added: 2026-08-03
+    revised: ""
+
+  - name: ARRIVAL_THRESHOLD
+    status: active
+    source: design/gdd/creature-behavior.md
+    referenced_by:
+      - design/gdd/creature-behavior.md
+    value: 2.0
+    unit: jar_space_units
+    added: 2026-08-03
+    revised: ""
+
+  - name: BAND_MIN_WIDTH
+    status: active
+    source: design/gdd/content-data.md
+    referenced_by:
+      - design/gdd/content-data.md
+    value: 15
+    unit: moisture_units (same 0-100 int scale as jar_moisture)
+    added: 2026-08-03
+    revised: ""
+
+  - name: LIGHT_BAND_MIN_WIDTH
+    status: active
+    source: design/gdd/content-data.md
+    referenced_by:
+      - design/gdd/content-data.md
+    value: 15
+    unit: light_units (same 0-100 int scale as light_level)
+    added: 2026-08-03
+    revised: ""
+
+  - name: LIGHT_STEP_PER_TICK
+    status: active
+    source: design/gdd/ecosystem-simulation.md
+    referenced_by:
+      - design/gdd/ecosystem-simulation.md
+    value: 5
+    unit: light_units_per_tick
+    added: 2026-08-03
+    revised: ""
+
+  - name: FOOTPRINT_MAX
+    status: active
+    source: design/gdd/content-data.md
+    referenced_by:
+      - design/gdd/content-data.md
+    value: 20.0
+    unit: jar_space_units (radius). Derived from Object Placement's jar-floor
+      ry=60 (~1/3 of the shorter ellipse radius) but enforced only by a code
+      comment today, not a cross-file check — see content-data.md Open
+      Questions ("FOOTPRINT_MAX cross-GDD coupling"). Must be re-derived if
+      Object Placement's jar-floor geometry ever changes.
+    added: 2026-08-03
+    revised: ""
+
+  - name: MOVEMENT_SPEED_MAX
+    status: active
+    source: design/gdd/content-data.md
+    referenced_by:
+      - design/gdd/content-data.md
+    value: 50.0
+    unit: jar_space_units_per_sec. A data-corruption gate, not a
+      design-safe ceiling — Creature Behavior's own tuning table caps the
+      design-safe range much lower (movement_speed 4-20/sec).
+    added: 2026-08-03
+    revised: ""
+
+  - name: RATE_MAX
+    status: active
+    source: design/gdd/content-data.md
+    referenced_by:
+      - design/gdd/content-data.md
+    value: 10
+    unit: growth_stage_units_per_tick. A data-corruption gate, not a
+      design-safe ceiling — Ecosystem Simulation's tuning table caps the
+      design-safe range much lower (growth_rate 1-3/tick, decay_rate
+      1-4/tick).
+    added: 2026-08-03
+    revised: ""
+
+  - name: PAUSE_DURATION_MAX
+    status: active
+    source: design/gdd/content-data.md
+    referenced_by:
+      - design/gdd/content-data.md
+    value: 30.0
+    unit: seconds. A data-corruption gate, not a design-safe ceiling —
+      generous headroom above Creature Behavior's current global pause
+      range (2.0-5.0s). Creature Behavior's own tuning table should define
+      the design-safe per-type range once it's revised to consume
+      pause_duration_min/max (currently still a global constant there).
+    added: 2026-08-03
+    revised: ""
+
+  - name: OPTIMAL_HOLD_TICKS_MAX
+    status: active
+    source: design/gdd/persistence-save.md
+    referenced_by:
+      - design/gdd/persistence-save.md
+    value: 10000
+    unit: ticks. A data-corruption gate on the loaded optimal_hold_ticks
+      field, not a design ceiling — optimal_hold_ticks has no natural cap
+      in legitimate play (it keeps incrementing while in_range holds, even
+      past the detail-event firing threshold of 10, since firing a bloom
+      doesn't reset it). Same pattern as content-data.md's RATE_MAX/
+      MOVEMENT_SPEED_MAX.
+    added: 2026-08-04
+    revised: ""
+
+  - name: CONDITION_STREAK_MAX
+    status: active
+    source: design/gdd/persistence-save.md
+    referenced_by:
+      - design/gdd/persistence-save.md
+    value: 25
+    unit: ticks (max(N_spawn_ticks, N_departure_ticks)). A data-corruption
+      gate on the loaded condition_streak_ticks field — above every value
+      the field should legitimately hold, since ecosystem-simulation.md's
+      Core Rules 6/7 have the debounce resolve and the counter reset to 0
+      in the same tick its threshold (N_spawn_ticks=3 or N_departure_ticks=25)
+      is met.
+    added: 2026-08-04
+    revised: "2026-08-09 — recomputed 5->25, max(N_spawn_ticks=3,
+      N_departure_ticks=25), following N_departure_ticks's tuning-pass
+      retune; see persistence-save.md Open Questions"
+
+  - name: D_water
+    status: active
+    source: design/gdd/ambient-audio.md
+    referenced_by:
+      - design/gdd/ambient-audio.md
+      - design/gdd/diorama-rendering.md
+    value: 3.0
+    unit: seconds. Also known as WATERING_SWELL_DURATION (ambient-audio.md's
+      own name for it). Shared rise-hold-fall envelope duration for the
+      watering feedback moment — diorama-rendering.md's Core Rule 11
+      (Watering Substrate Sheen) reuses this same constant and the same
+      envelope(t, D) function directly so the visual and audio swells stay
+      locked to one shared clock, not merely coincidentally the same length.
+      Registered 2026-08-09 (a cross-GDD review finding — diorama-rendering.md
+      already claimed this was registered before it actually was).
+    added: 2026-08-09
+    revised: ""
+
+  - name: pacing_delay
+    status: active
+    source: design/gdd/discovery-surfacing.md
+    referenced_by:
+      - design/gdd/discovery-surfacing.md
+    value: 4.0
+    unit: seconds. Gap between one discovery cue's activation and the
+      next (activation_time(i) = i * pacing_delay). Safe range 2.0-8.0s
+      per discovery-surfacing.md's Tuning Knobs.
+    added: 2026-08-05
+    revised: ""
+
+  - name: cue_fade_duration
+    status: active
+    source: design/gdd/discovery-surfacing.md
+    referenced_by:
+      - design/gdd/discovery-surfacing.md
+      - design/gdd/ambient-audio.md
+    value: 6.0
+    unit: seconds. How long one discovery cue stays visible before it
+      fades (fade_end_time(i) = activation_time(i) + cue_fade_duration).
+      Deliberately greater than pacing_delay so adjacent cues overlap.
+      Safe range 4.0-10.0s per discovery-surfacing.md's Tuning Knobs.
+    added: 2026-08-05
+    revised: ""
 
 # Example:
 #

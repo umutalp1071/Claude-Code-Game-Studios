@@ -29,8 +29,8 @@
 #   All forbidden patterns: Grep pattern="^  - pattern:" (forbidden_patterns section)
 #   Superseded entries:     Grep pattern="status: superseded"
 
-version: 1
-last_updated: ""
+version: 3
+last_updated: "2026-08-11"
 
 # ─── STATE OWNERSHIP ─────────────────────────────────────────────────────────
 # Who is the authoritative owner of each piece of shared game state.
@@ -43,7 +43,90 @@ last_updated: ""
 # interface: how other systems access this state (read-only property, method call,
 #   signal, shared resource, etc.) — this is the contract other ADRs depend on.
 
-state_ownership: []
+state_ownership:
+  - state: content_type_definitions
+    status: active
+    owner_system: content-data
+    adr: docs/architecture/adr-0001-content-data-format.md
+    interface: "get_definition(id: String) -> Resource (read-only by convention, null on miss)"
+    write_access: content-data-only   # loaded once at startup from .tres files; never mutated at runtime
+    referenced_by:
+      - docs/architecture/adr-0001-content-data-format.md
+    added: 2026-08-10
+    revised: ""
+
+  - state: object_position_held_grab_offset
+    status: active
+    owner_system: object-placement
+    adr: docs/architecture/adr-0003-object-placement-collision-approach.md
+    interface: "get_position(object_id: String) -> Vector2 (live while held, committed otherwise); is_held(object_id: String) -> bool; is_within_any_footprint(point: Vector2) -> bool (ADR-0011 companion edit, footprint_size now cached per-object internally, never exposed directly); restore(restored_blob: Dictionary) -> void (ADR-0002 companion edit, one-time bootstrap population, called ONLY by SessionBootstrap step 4 — was get_position()/is_held() only). Revised 2026-08-11 (this pass): added is_within_any_footprint() (ADR-0011 companion edit)."
+    write_access: object-placement-only   # runtime writes driven entirely by Input Abstraction signals; restore() is one-time bootstrap population, never overlaps the signal-driven path
+    referenced_by:
+      - docs/architecture/adr-0003-object-placement-collision-approach.md
+      - docs/architecture/adr-0002-signal-init-order-snapshot-architecture.md   # SessionBootstrap calls restore() at step 4
+      - diorama-rendering.md   # polls from its own _process(), per architecture.md's leaf-consumer pattern
+      - tending-input.md       # footprint exclusion (taps on objects don't water)
+      - docs/architecture/adr-0007-creature-behavior-wander-state-machine.md   # movement-obstacle footprints
+      - docs/architecture/adr-0011-tending-input-watering-router.md   # adds is_within_any_footprint() companion edit
+    added: 2026-08-10
+    revised: "2026-08-11"
+
+  - state: jar_moisture_light_growth_creature_state
+    status: active
+    owner_system: ecosystem-simulation
+    adr: docs/architecture/adr-0004-ecosystem-simulation-tick-architecture.md
+    interface: "get_jar_moisture()/get_light_level()/get_growth_stage(plant_id)/get_creature_state(creature_id) -> CreatureState.Presence/get_last_known_position(creature_id)/get_was_present_during_batch(creature_id)/get_detail_event_fired(plant_id)/get_plant_ids()/get_creature_ids() -> Array[String] (insertion order)/get_watering_amount() -> int (ADR-0011 companion edit, backed by const WATERING_AMOUNT); writes only via apply_watering()/advance_tick()/set_last_known_position()/restore(restored_blob: Dictionary) (ADR-0002 direct-call convention). Revised 2026-08-11 (this pass): added get_watering_amount() (ADR-0011 companion edit — no prior ADR had declared watering_amount as a stored constant). Revised 2026-08-10 (earlier pass): added restore() (ADR-0002 companion edit, one-time bootstrap population, called ONLY by SessionBootstrap step 3). Revised 2026-08-10 (earlier pass): added the four getters (companion edits for Discovery Surfacing's ADR)."
+    write_access: ecosystem-simulation-only   # never reaches outward per its own Interactions table guarantee; restore() is an inbound bootstrap call, same direction as apply_watering()/advance_tick()
+    referenced_by:
+      - docs/architecture/adr-0004-ecosystem-simulation-tick-architecture.md
+      - docs/architecture/adr-0002-signal-init-order-snapshot-architecture.md   # SessionBootstrap calls restore() at step 3
+      - discovery-surfacing.md
+      - diorama-rendering.md
+      - persistence-save.md
+      - creature-behavior.md
+      - docs/architecture/adr-0011-tending-input-watering-router.md   # adds get_watering_amount() companion edit
+      - docs/architecture/adr-0012-ambient-audio-godot-strategy.md   # adds watering_applied signal companion edit
+    added: 2026-08-10
+    revised: "2026-08-11"
+
+  - state: time_drift_session_state
+    status: active
+    owner_system: time-drift
+    adr: docs/architecture/adr-0006-time-drift-session-lifecycle.md
+    interface: "get_state() -> SessionState (enum {INACTIVE, CATCHING_UP, ACTIVE}, read-only) / get_day_night_phase() -> float (0.0-1.0, read-only, cosmetic only) / run_catchup_and_activate() -> void (ADR-0002 companion edit, called ONLY by SessionBootstrap steps 6-7 — was get_state()/get_day_night_phase() only)"
+    write_access: time-drift-only   # driven by SessionBootstrap's sequencing (ADR-0002) and wall-clock time; no external write API
+    referenced_by:
+      - docs/architecture/adr-0006-time-drift-session-lifecycle.md
+      - docs/architecture/adr-0002-signal-init-order-snapshot-architecture.md   # SessionBootstrap calls run_catchup_and_activate() at steps 6-7
+      - creature-behavior.md   # reads CATCHING_UP/ACTIVE to suppress SPAWNING/DEPARTING animation for batch-resolved transitions
+      - discovery-surfacing.md   # needs the pre/post-batch snapshot boundary this state machine defines
+      - diorama-rendering.md   # reads get_day_night_phase() every frame for cosmetic lighting
+    added: 2026-08-10
+    revised: "2026-08-10"
+
+  - state: discovery_reveal_queue
+    status: active
+    owner_system: discovery-surfacing
+    adr: docs/architecture/adr-0010-discovery-surfacing-reveal-queue-architecture.md
+    interface: "get_active_items() -> Array[DiscoveryItem] (read-only)"
+    write_access: discovery-surfacing-only   # driven entirely by its own capture_pre_batch_snapshot()/compute_delta(), called only by SessionBootstrap (ADR-0002)
+    referenced_by:
+      - docs/architecture/adr-0010-discovery-surfacing-reveal-queue-architecture.md
+      - docs/architecture/adr-0009-diorama-rendering-light2d-web-strategy.md
+    added: 2026-08-10
+    revised: ""
+
+  - state: ambient_volume_muted_setting
+    status: active
+    owner_system: ambient-audio
+    adr: docs/architecture/adr-0012-ambient-audio-godot-strategy.md
+    interface: "Runtime authority: set_volume(v: float) -> void / toggle_mute() -> void (ambient-audio-owned, called only by the future mute/volume UI control). Read at session start via a one-shot poll of PersistenceSave.get_restored_blob() on ambient-audio's first _process() call (not _ready() — see ADR-0012 Decision §6 for the autoload-ordering reason). Durable copy lives in persistence-save's blob (Core Rule 1), written via the new refresh_mirror() call (ADR-0012 companion edit to ADR-0005) after every set_volume()/toggle_mute()."
+    write_access: ambient-audio-only   # persistence-save stores the durable blob copy but never originates a write to this value itself
+    referenced_by:
+      - docs/architecture/adr-0012-ambient-audio-godot-strategy.md
+      - docs/architecture/adr-0005-persistence-save-web-storage-strategy.md   # durable blob copy, refresh_mirror() companion edit
+    added: 2026-08-11
+    revised: ""
 
 # Example:
 #
@@ -71,7 +154,84 @@ state_ownership: []
 #
 # pattern options: signal | direct_call | event_bus | shared_resource | rpc | none
 
-interfaces: []
+interfaces:
+  - contract: content_data_query
+    status: active
+    pattern: direct_call
+    producer: content-data
+    consumers:
+      - ecosystem-simulation   # type_id validation, per-plant/creature tuning fields
+      - object-placement       # footprint/type lookups
+      - creature-behavior      # movement_speed, pause_duration, spawn_conditions
+      - diorama-rendering      # visual_stages, growth_pattern
+      - persistence-save       # type_id validation on restore
+    adr: docs/architecture/adr-0001-content-data-format.md
+    signature: "get_definition(id: String) -> Resource"
+    referenced_by:
+      - docs/architecture/adr-0001-content-data-format.md
+    added: 2026-08-10
+    revised: ""
+
+  - contract: gesture_input_delivery
+    status: active
+    pattern: signal
+    producer: input-abstraction
+    consumers:
+      - object-placement   # tap/drag_start/drag_move/drag_end drive repositioning + footprint-tap acknowledgment
+      - tending-input       # tap (and possibly drag) drives watering/misting target
+    adr: docs/architecture/adr-0008-input-gesture-abstraction-web-touch-focus.md
+    signal_signature: "tap(position: Vector2, device_id: int) / drag_start(position: Vector2, device_id: int) / drag_move(position: Vector2, delta: Vector2, device_id: int) / drag_end(position: Vector2, canceled: bool, device_id: int)"
+    referenced_by:
+      - docs/architecture/adr-0008-input-gesture-abstraction-web-touch-focus.md
+      - docs/architecture/adr-0003-object-placement-collision-approach.md   # already consumed this contract before it was formally registered
+    added: 2026-08-10
+    revised: ""
+
+  - contract: discovery_active_items_query
+    status: active
+    pattern: direct_call
+    producer: discovery-surfacing
+    consumers:
+      - diorama-rendering   # per-entity scripts poll for their own active cue, if any (ADR-0009)
+      - ambient-audio       # polls category + count for the Reactive Layer discovery bed-shift (ADR-0012)
+    adr: docs/architecture/adr-0010-discovery-surfacing-reveal-queue-architecture.md
+    signature: "get_active_items() -> Array[DiscoveryItem]"
+    referenced_by:
+      - docs/architecture/adr-0010-discovery-surfacing-reveal-queue-architecture.md
+      - docs/architecture/adr-0009-diorama-rendering-light2d-web-strategy.md   # resolves that ADR's provisional assumption
+      - docs/architecture/adr-0012-ambient-audio-godot-strategy.md   # second consumer, no change to the contract itself
+    added: 2026-08-10
+    revised: "2026-08-11"
+
+  - contract: watering_notification
+    status: active
+    pattern: signal
+    producer: ecosystem-simulation
+    consumers:
+      - ambient-audio       # drives the Reactive Layer watering swell envelope (ADR-0012)
+      - diorama-rendering   # drives Watering Substrate Sheen, ADR-0009 Core Rule 11 (previously unspecified trigger)
+    adr: docs/architecture/adr-0012-ambient-audio-godot-strategy.md
+    signal_signature: "watering_applied (no parameters)"
+    referenced_by:
+      - docs/architecture/adr-0012-ambient-audio-godot-strategy.md
+      - docs/architecture/adr-0004-ecosystem-simulation-tick-architecture.md   # companion-edited to add the signal
+      - docs/architecture/adr-0009-diorama-rendering-light2d-web-strategy.md   # cross-reference note, closes its own latent gap
+    added: 2026-08-11
+    revised: ""
+
+  - contract: save_mirror_refresh_trigger
+    status: active
+    pattern: direct_call
+    producer: persistence-save
+    consumers:
+      - ambient-audio   # only non-gesture caller so far — see ADR-0005's own anticipated-gap Risk
+    adr: docs/architecture/adr-0012-ambient-audio-godot-strategy.md
+    signature: "refresh_mirror() -> void"
+    referenced_by:
+      - docs/architecture/adr-0012-ambient-audio-godot-strategy.md
+      - docs/architecture/adr-0005-persistence-save-web-storage-strategy.md   # companion-edited to add the public wrapper
+    added: 2026-08-11
+    revised: ""
 
 # Example:
 #
@@ -131,7 +291,107 @@ performance_budgets: []
 # Register an API decision when the choice is non-obvious and other ADRs might
 # make a different choice for the same purpose without knowing this was decided.
 
-api_decisions: []
+api_decisions:
+  - purpose: inter_system_communication_pattern
+    status: active
+    api: "Direct typed method calls for commands/queries (caller needs a return value or ordering guarantee); Godot signals for notifications (caller doesn't know/care who's listening)"
+    not: "Central event bus / mediator autoload"
+    adr: docs/architecture/adr-0002-signal-init-order-snapshot-architecture.md
+    reason: "11 MVP systems have well-defined pairwise dependencies (per systems-index.md), not a many-to-many fan-out mesh; an event bus would lose call-site traceability and typed return values for a problem this project doesn't have"
+    referenced_by:
+      - docs/architecture/adr-0002-signal-init-order-snapshot-architecture.md
+    added: 2026-08-10
+    revised: ""
+
+  - purpose: session_init_and_save_load_sequencing
+    status: active
+    api: "SessionBootstrap autoload, LAST in Project Settings autoload load order, drives the 11-step session-start/save-load sequence (architecture.md Data Flow §3/§4) once via direct calls, then does nothing further"
+    not: "Ad-hoc ordering via individual autoloads' own _ready() calling into each other"
+    adr: docs/architecture/adr-0002-signal-init-order-snapshot-architecture.md
+    reason: "The sequence has real cross-system ordering dependencies (a snapshot that must happen between two other systems' _ready(), a step gated on a runtime state transition) that Godot's autoload load-order guarantee alone can't express; must load LAST since it calls into every autoload it sequences, all of which must have already run their own _ready() first"
+    referenced_by:
+      - docs/architecture/adr-0002-signal-init-order-snapshot-architecture.md
+    added: 2026-08-10
+    revised: ""
+
+  - purpose: small_shared_state_module_shape
+    status: active
+    api: "Single autoload holding a Dictionary registry of RefCounted value objects (keyed by id), zero scene-tree nodes of its own"
+    not: "Per-object Node2D scripts for state that needs cross-object queries (e.g. pairwise overlap checks)"
+    adr: docs/architecture/adr-0003-object-placement-collision-approach.md
+    reason: "A single Dictionary in one autoload makes cross-object checks (e.g. Object Placement's pairwise no_overlap) a straight loop instead of needing sibling node references or group lookups; RefCounted (not Resource) fits private, per-frame-mutated runtime state better than Resource's CoW/duplicate/serialization semantics"
+    referenced_by:
+      - docs/architecture/adr-0003-object-placement-collision-approach.md
+    added: 2026-08-10
+    revised: ""
+
+  - purpose: testable_pure_formula_placement
+    status: active
+    api: "Pure/static formula functions live in a separate, non-autoload script (e.g. object_placement_math.gd), referenced by both the owning autoload and unit tests"
+    not: "Static funcs bundled inside the autoload script itself"
+    adr: docs/architecture/adr-0003-object-placement-collision-approach.md
+    reason: "Keeps coding-standards.md's dependency-injection requirement clean — tests call the math script directly with injected values, never loading the autoload's live-registry/signal-connect code just to reach a formula. Reusable pattern for future ADRs with similar pure-formula content (e.g. Ecosystem Simulation's RNG-injected should_trigger_detail())."
+    referenced_by:
+      - docs/architecture/adr-0003-object-placement-collision-approach.md
+      - docs/architecture/adr-0007-creature-behavior-wander-state-machine.md
+    added: 2026-08-10
+    revised: ""
+
+  - purpose: production_rng_ownership
+    status: active
+    api: "The consuming system owns a private RandomNumberGenerator (randomize()'d once at _ready(), no public setter), generates the roll internally, then passes it as a parameter into a separate pure/static gate function for the actual decision"
+    not: "A dedicated RNG-provider autoload, or an external system supplying the roll as a call parameter"
+    adr: docs/architecture/adr-0004-ecosystem-simulation-tick-architecture.md
+    reason: "Keeps the gate decision logic unit-testable with literal roll values without coupling an unrelated system (e.g. Time & Drift) to a mechanic it has no stake in, and without requiring the RNG-owning system to call outward (which several systems' Interactions tables explicitly forbid)"
+    referenced_by:
+      - docs/architecture/adr-0004-ecosystem-simulation-tick-architecture.md
+      - docs/architecture/adr-0007-creature-behavior-wander-state-machine.md
+    added: 2026-08-10
+    revised: ""
+
+  - purpose: web_export_persistence_storage_backend
+    status: active
+    api: "localStorage via JavaScriptBridge.eval(), single mechanism for both the true-session-end write and the visibilitychange/pagehide-triggered write (the latter executed entirely in pure JS, zero GDScript involvement at hide time). FileAccess/user:// retained only for non-Web (editor/desktop dev) builds, never shipped in the Web persistence path."
+    not: "FileAccess/user:// + FS.syncfs() (IDBFS) for Web export — evaluated and rejected; see ADR-0005 Alternatives Considered"
+    adr: docs/architecture/adr-0005-persistence-save-web-storage-strategy.md
+    reason: "Web Export Spike Gate B evidence (desktop Chrome only): IDBFS without FS.syncfs() showed a real hard-kill failure (2/3), and even with syncfs() it shares the same GDScript-must-run-during-hide dependency as the JS-callback option, which is independently the highest-risk axis for the untested WebKit family. The chosen mechanism removes that dependency from the hide-triggered write entirely by construction, not just by favorable measurement on one browser."
+    referenced_by:
+      - docs/architecture/adr-0005-persistence-save-web-storage-strategy.md
+    added: 2026-08-10
+    revised: ""
+
+  - purpose: web_export_session_boundary_detection
+    status: active
+    api: "Treat every hide event (visibilitychange->hidden or pagehide) as a possible session boundary — update last_visit_timestamp on every hide, not gated on distinguishing a true close from mere backgrounding. Has no mid-session observable effect since the value is only ever read at the next real page load."
+    not: "Attempting to detect a 'true close' event specifically (e.g. gating on unload/beforeunload firing) before committing session-boundary state"
+    adr: docs/architecture/adr-0006-time-drift-session-lifecycle.md
+    reason: "No reliable close-vs-background signal exists on the Web platform in general — a documented Page Lifecycle API characteristic, not an engine-version gap or something further browser testing would resolve. Gating on true-close detection left last_visit_timestamp permanently stale for any session ending via an untrapped OS-level tab kill, the common termination path on mobile. General pattern for this class of problem — any future ADR needing a 'session ended' signal on Web export should reuse this stance rather than re-attempt close detection."
+    referenced_by:
+      - docs/architecture/adr-0006-time-drift-session-lifecycle.md
+    added: 2026-08-10
+    revised: ""
+
+  - purpose: autoload_to_scene_node_reference
+    status: active
+    api: "Explicit self-registration — the scene node calls Autoload.register_x(self) from its own _ready() (which Godot guarantees runs after every autoload's _ready() has already completed)"
+    not: "Lazy %UniqueName lookup via get_tree().current_scene from the autoload side"
+    adr: docs/architecture/adr-0008-input-gesture-abstraction-web-touch-focus.md
+    reason: "A missing/forgotten registration fails loudly (null reference, first use errors) rather than silently resolving to whatever a scene-unique name currently happens to match; matches coding-standards.md's dependency-injection-over-singletons preference"
+    referenced_by:
+      - docs/architecture/adr-0008-input-gesture-abstraction-web-touch-focus.md
+    added: 2026-08-10
+    revised: ""
+
+  - purpose: rendering_entity_ownership
+    status: active
+    api: "Each rendered entity (plant/creature/object instance) is its own scene node + script polling its relevant upstream system's read-only getters directly in _process(); Discovery cue Light2D nodes are created/freed as children of whichever entity is the cue's current target"
+    not: "A central DioramaRenderer coordinator autoload polling everything and pushing updates out; a separate pooled CueLightManager for Discovery cue lights"
+    adr: docs/architecture/adr-0009-diorama-rendering-light2d-web-strategy.md
+    reason: "Extends the leaf-consumer pattern ADR-0003 already established (DioramaRendering polling ObjectPlacement directly) to the rest of the rendering system; the entity roster is small and fixed (a handful of plants/creatures, one object), so a coordinator solves a fan-out problem this project doesn't have, and a target-owned child Light2D gets correct transform inheritance for free from normal scene-tree parenting instead of needing separate pool-positioning logic"
+    referenced_by:
+      - docs/architecture/adr-0009-diorama-rendering-light2d-web-strategy.md
+    added: 2026-08-10
+    revised: ""
 
 # Example:
 #
@@ -157,7 +417,29 @@ api_decisions: []
 # Register a pattern when an ADR explicitly bans it AND other ADRs might
 # unknowingly use it (i.e., it's a tempting but wrong approach for this project).
 
-forbidden_patterns: []
+forbidden_patterns:
+  - pattern: content_data_reference_by_path
+    status: active
+    description: "Gameplay code must never reference a content type definition
+      by its res:// file path. Always look it up by id via
+      content-data.get_definition(id)."
+    why: "content-data.md Core Rule 1 — path references break the moment a
+      .tres file is renamed or moved, and bypass the definition_validity
+      load-time gate entirely."
+    adr: docs/architecture/adr-0001-content-data-format.md
+    added: 2026-08-10
+
+  - pattern: event_bus_mediator
+    status: active
+    description: "No central event-bus/dispatcher autoload for cross-system
+      communication. Use direct method calls for commands/queries and Godot
+      signals for notifications instead (see api_decisions:
+      inter_system_communication_pattern)."
+    why: "11 MVP systems have well-defined pairwise dependencies, not a
+      many-to-many fan-out mesh; a bus would lose call-site traceability and
+      typed return values for a problem this project doesn't have."
+    adr: docs/architecture/adr-0002-signal-init-order-snapshot-architecture.md
+    added: 2026-08-10
 
 # Example:
 #

@@ -1,9 +1,44 @@
 # Godot — Current Best Practices
 
-Last verified: 2026-02-12 | Engine: Godot 4.6
+Last verified: 2026-08-02 | Engine: Godot 4.7.1
 
 Practices that are **new or changed** since the model's training data (~4.3).
 This supplements (not replaces) the agent's built-in knowledge.
+
+## Project-Specific: Web Export Rendering
+
+This project targets **Web export**, which forces the **Compatibility**
+rendering method (OpenGL ES3/WebGL2) — Forward+ and Mobile renderer methods
+require Vulkan/D3D12/Metal, none of which are available in browsers.
+Advanced features like SDFGI and some volumetric fog effects are unavailable
+under Compatibility. Validate any rendering/lighting plan (including the
+Diorama Realism visual anchor in `design/gdd/game-concept.md`) against
+Compatibility-renderer support, not general Godot 4 capability.
+
+## Input (4.7)
+
+- **Mouse/keyboard device IDs are now named constants**: `InputEvent.DEVICE_ID_MOUSE`
+  and `InputEvent.DEVICE_ID_KEYBOARD`, replacing the old literal `0`. Compare
+  against these constants in any input-device-branching code — relevant here
+  since the project mixes mouse and touch input.
+
+## Rendering (4.7)
+
+- LinearToSRGB visual shader node no longer clamps output to `[0.0, 1.0]` on
+  Mobile/Forward+ renderers — not applicable under Compatibility, but relevant
+  if switching renderer methods later.
+- `CanvasItem` lines lost their antialiasing feather — they render thinner
+  than in 4.6 by default.
+- Shader preprocessor restrictions are tighter — some macro patterns that
+  compiled under 4.6 may now fail; verify custom shaders after any upgrade.
+
+## Physics (4.7, Jolt)
+
+- `SoftBody3D` default mass changed from `0` (auto-calculated) to `1` kg;
+  `linear_stiffness` behavior changed — re-tune if soft bodies are used.
+- `WorldBoundaryShape3D` plane distance sign is reversed from 4.6 — flip
+  sign values manually when porting old scenes.
+- Jolt `Area3D` now also reports overlaps with `SoftBody3D`.
 
 ## GDScript (4.5+)
 

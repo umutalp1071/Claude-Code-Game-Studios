@@ -1,6 +1,6 @@
 # Godot — Deprecated APIs
 
-Last verified: 2026-02-12
+Last verified: 2026-08-02
 
 If an agent suggests any API in the "Deprecated" column, it MUST be replaced
 with the "Use Instead" column.
@@ -30,6 +30,8 @@ with the "Use Instead" column.
 | `Skeleton3D` signal `bone_pose_updated` | `skeleton_updated` | 4.3 | Renamed |
 | `AnimationPlayer.method_call_mode` | `AnimationMixer.callback_mode_method` | 4.3 | Moved to base class |
 | `AnimationPlayer.playback_active` | `AnimationMixer.active` | 4.3 | Moved to base class |
+| `RichTextLabel.ImageUpdateMask.UPDATE_WIDTH_IN_PERCENT` | `UPDATE_WIDTH_UNIT` | 4.7 | Renamed enum member |
+| `AudioEffectSpectrumAnalyzer.tap_back_pos` | *(removed, no replacement)* | 4.7 | Property removed entirely |
 
 ## Patterns (Not Just APIs)
 
@@ -41,3 +43,4 @@ with the "Use Instead" column.
 | `Texture2D` in shader parameters | `Texture` base type | Changed in 4.4 |
 | Manual post-process viewport chains | `Compositor` + `CompositorEffect` | Structured post-processing (4.3+) |
 | GodotPhysics3D for new projects | Jolt Physics 3D | Default since 4.6; better stability |
+| Comparing mouse/keyboard device ID to literal `0` | `InputEvent.DEVICE_ID_MOUSE` / `DEVICE_ID_KEYBOARD` | Device ID numbering scheme changed in 4.7 |

@@ -1,0 +1,268 @@
+<!-- PROTOTYPE - NOT FOR PRODUCTION
+     Question: Does the ecosystem drift feel alive (worth noticing) rather than random or static?
+     Date: 2026-08-02 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terrarium Prototype</title>
+<style>
+  html, body {
+    margin: 0; height: 100%;
+    background: #1b1f1a;
+    color: #eee;
+    font-family: Georgia, 'Times New Roman', serif;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 18px;
+    touch-action: none;
+    user-select: none;
+  }
+  h1 { font-size: 1.1rem; font-weight: normal; opacity: 0.7; letter-spacing: 0.05em; }
+
+  #jar {
+    position: relative;
+    width: 320px; height: 380px;
+    border-radius: 30px 30px 50px 50px;
+    background: linear-gradient(180deg, rgba(150,190,200,0.25), rgba(90,130,150,0.35));
+    border: 3px solid rgba(220,235,240,0.5);
+    box-shadow: inset 0 0 40px rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+  #dirt {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 90px;
+    background: linear-gradient(180deg, #5b3f2c, #3a2a1c);
+    border-top: 2px solid #2a1d13;
+  }
+  .moss {
+    position: absolute; bottom: 78px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #8fd17a, #3f7a34 70%);
+    transition: width 0.6s ease, height 0.6s ease, opacity 0.6s ease;
+    filter: blur(0.2px);
+  }
+  .moss .detail {
+    position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    background: #ffe9a8; top: 20%; left: 55%;
+    box-shadow: 0 0 4px 1px rgba(255,233,168,0.8);
+  }
+  #rock {
+    position: absolute; bottom: 82px; width: 46px; height: 30px;
+    border-radius: 50% 50% 45% 45%;
+    background: radial-gradient(circle at 35% 30%, #9a9a9a, #5c5c5c 80%);
+    cursor: grab;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+  }
+  #creature {
+    position: absolute; bottom: 84px; font-size: 22px;
+    transition: left 1.2s ease, bottom 0.3s ease, opacity 0.8s ease;
+    opacity: 0;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+  }
+  #creature.visible { opacity: 1; }
+  .trail {
+    position: absolute; width: 3px; height: 3px; border-radius: 50%;
+    background: rgba(230,240,230,0.35); bottom: 80px;
+  }
+
+  #moisture-wrap {
+    position: absolute; top: 10px; left: 10px; right: 10px;
+    height: 6px; border-radius: 3px; background: rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  #moisture-bar {
+    height: 100%; width: 50%;
+    background: linear-gradient(90deg, #6cb6d9, #2f7fa8);
+    transition: width 0.5s ease;
+  }
+
+  #controls { display: flex; gap: 12px; align-items: center; }
+  button {
+    font-family: inherit; font-size: 0.95rem;
+    padding: 10px 18px; border-radius: 10px; border: none;
+    background: #3a4a3c; color: #eee; cursor: pointer;
+    box-shadow: 0 3px 0 #223125;
+  }
+  button:active { transform: translateY(2px); box-shadow: none; }
+  button#water { background: #2f5f77; box-shadow: 0 3px 0 #1c3d4c; }
+  button#advance { background: #5c4a2f; box-shadow: 0 3px 0 #3a2f1c; }
+
+  #debug-toggle { font-size: 0.75rem; opacity: 0.6; display: flex; gap: 6px; align-items: center; }
+  #debug {
+    font-size: 0.7rem; opacity: 0.7; white-space: pre;
+    min-height: 3.2em;
+  }
+  #hint { font-size: 0.8rem; opacity: 0.5; max-width: 320px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>a small terrarium</h1>
+
+<div id="jar">
+  <div id="moisture-wrap"><div id="moisture-bar"></div></div>
+  <div id="dirt"></div>
+  <div class="moss" id="moss0" style="left:40px;"><div class="detail" style="display:none"></div></div>
+  <div class="moss" id="moss1" style="left:130px;"><div class="detail" style="display:none"></div></div>
+  <div class="moss" id="moss2" style="left:220px;"><div class="detail" style="display:none"></div></div>
+  <div id="rock" style="left:170px;"></div>
+  <div id="creature">🐌</div>
+</div>
+
+<div id="controls">
+  <button id="water">💧 Water</button>
+  <button id="advance">⏩ Let Time Pass</button>
+</div>
+
+<label id="debug-toggle"><input type="checkbox" id="debug-check"> show internal numbers (dev only)</label>
+<div id="debug"></div>
+
+<p id="hint">Water it, rearrange the rock if you like, and click "Let Time Pass" whenever you want to see what the jar became on its own.</p>
+
+<script>
+// ---- Tunable simulation constants ----
+const MOISTURE_DECAY_PER_TICK = 3;
+const WATER_AMOUNT = 25;
+const MOSS_GOOD_MIN = 40, MOSS_GOOD_MAX = 75;
+const MOSS_DRY_THRESHOLD = 25;
+const MOSS_WET_THRESHOLD = 90;
+const MOSS_GROWTH_MIN = 1, MOSS_GROWTH_MAX = 4;
+const MOSS_GROWTH_SPURT_CHANCE = 0.08, MOSS_GROWTH_SPURT_BONUS = 8;
+const MOSS_SHRINK_DRY_MIN = 1, MOSS_SHRINK_DRY_MAX = 3;
+const MOSS_SHRINK_WET_MIN = 0, MOSS_SHRINK_WET_MAX = 2;
+const MOSS_DETAIL_CHANCE = 0.05; // per tick, per patch, once patch > 50 coverage
+const CREATURE_APPEAR_TOTAL_THRESHOLD = 90;
+const CREATURE_APPEAR_CHANCE = 0.08;
+const CREATURE_MOVE_CHANCE = 0.18;
+const CREATURE_TRAIL_CHANCE = 0.12;
+const CREATURE_LEAVE_TOTAL_THRESHOLD = 40;
+const CREATURE_LEAVE_CHANCE = 0.06;
+const AUTO_TICK_MS = 4000;
+const ADVANCE_TICKS = 30;
+
+// ---- State ----
+let moisture = 50;
+let moss = [20, 8, 0]; // coverage 0-100 per patch
+let creatureVisible = false;
+let creaturePatch = 0;
+
+const mossEls = [document.getElementById('moss0'), document.getElementById('moss1'), document.getElementById('moss2')];
+const mossLeftPx = [40, 130, 220];
+const moistureBar = document.getElementById('moisture-bar');
+const creatureEl = document.getElementById('creature');
+const jarEl = document.getElementById('jar');
+const debugEl = document.getElementById('debug');
+const debugCheck = document.getElementById('debug-check');
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function rand(min, max) { return min + Math.random() * (max - min); }
+
+function tick() {
+  moisture = clamp(moisture - MOISTURE_DECAY_PER_TICK, 0, 100);
+
+  for (let i = 0; i < moss.length; i++) {
+    if (moisture >= MOSS_GOOD_MIN && moisture <= MOSS_GOOD_MAX) {
+      let growth = rand(MOSS_GROWTH_MIN, MOSS_GROWTH_MAX);
+      if (Math.random() < MOSS_GROWTH_SPURT_CHANCE) growth += MOSS_GROWTH_SPURT_BONUS;
+      moss[i] = clamp(moss[i] + growth, 0, 100);
+    } else if (moisture < MOSS_DRY_THRESHOLD) {
+      moss[i] = clamp(moss[i] - rand(MOSS_SHRINK_DRY_MIN, MOSS_SHRINK_DRY_MAX), 0, 100);
+    } else if (moisture > MOSS_WET_THRESHOLD) {
+      moss[i] = clamp(moss[i] - rand(MOSS_SHRINK_WET_MIN, MOSS_SHRINK_WET_MAX), 0, 100);
+    }
+  }
+
+  const total = moss.reduce((a, b) => a + b, 0);
+
+  if (!creatureVisible && total > CREATURE_APPEAR_TOTAL_THRESHOLD && Math.random() < CREATURE_APPEAR_CHANCE) {
+    creatureVisible = true;
+    creaturePatch = moss.indexOf(Math.max(...moss));
+  }
+  if (creatureVisible) {
+    if (total < CREATURE_LEAVE_TOTAL_THRESHOLD && Math.random() < CREATURE_LEAVE_CHANCE) {
+      creatureVisible = false;
+    } else if (Math.random() < CREATURE_MOVE_CHANCE) {
+      if (Math.random() < CREATURE_TRAIL_CHANCE) dropTrail();
+      creaturePatch = Math.floor(Math.random() * moss.length);
+    }
+  }
+
+  render();
+}
+
+function dropTrail() {
+  const trail = document.createElement('div');
+  trail.className = 'trail';
+  trail.style.left = (mossLeftPx[creaturePatch] + rand(0, 40)) + 'px';
+  jarEl.appendChild(trail);
+  setTimeout(() => trail.remove(), 20000);
+}
+
+function render() {
+  moistureBar.style.width = moisture + '%';
+
+  for (let i = 0; i < moss.length; i++) {
+    const size = 16 + moss[i] * 0.7;
+    mossEls[i].style.width = size + 'px';
+    mossEls[i].style.height = (size * 0.55) + 'px';
+    mossEls[i].style.opacity = Math.max(0.15, moss[i] / 100);
+    const detail = mossEls[i].querySelector('.detail');
+    if (moss[i] > 50 && Math.random() < MOSS_DETAIL_CHANCE) {
+      detail.style.display = 'block';
+    }
+  }
+
+  if (creatureVisible) {
+    creatureEl.classList.add('visible');
+    creatureEl.style.left = (mossLeftPx[creaturePatch] + 10) + 'px';
+  } else {
+    creatureEl.classList.remove('visible');
+  }
+
+  if (debugCheck.checked) {
+    debugEl.textContent =
+      `moisture: ${moisture.toFixed(0)}%\n` +
+      `moss: [${moss.map(m => m.toFixed(0)).join(', ')}]  total: ${moss.reduce((a,b)=>a+b,0).toFixed(0)}\n` +
+      `creature: ${creatureVisible ? 'visible @ patch ' + creaturePatch : 'not present'}`;
+  } else {
+    debugEl.textContent = '';
+  }
+}
+
+document.getElementById('water').addEventListener('click', () => {
+  moisture = clamp(moisture + WATER_AMOUNT, 0, 100);
+  render();
+});
+
+document.getElementById('advance').addEventListener('click', () => {
+  for (let i = 0; i < ADVANCE_TICKS; i++) tick();
+});
+
+debugCheck.addEventListener('change', render);
+
+setInterval(tick, AUTO_TICK_MS);
+
+// ---- Rock drag (mouse + touch via Pointer Events) ----
+const rock = document.getElementById('rock');
+let dragging = false, offsetX = 0;
+
+rock.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  rock.setPointerCapture(e.pointerId);
+  offsetX = e.clientX - rock.getBoundingClientRect().left;
+  rock.style.cursor = 'grabbing';
+});
+rock.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const jarRect = jarEl.getBoundingClientRect();
+  let newLeft = e.clientX - jarRect.left - offsetX;
+  newLeft = clamp(newLeft, 0, jarRect.width - 46);
+  rock.style.left = newLeft + 'px';
+});
+rock.addEventListener('pointerup', () => { dragging = false; rock.style.cursor = 'grab'; });
+rock.addEventListener('pointercancel', () => { dragging = false; rock.style.cursor = 'grab'; });
+
+render();
+</script>
+</body>
+</html>

@@ -24,10 +24,722 @@
 #
 # STATUS VALUES: active | deprecated | superseded-by: TR-[system]-NNN
 
-version: 1
-last_updated: ""
+version: 4
+last_updated: "2026-08-11"
 
-requirements: []
+# Populated by the first /architecture-review pass (2026-08-10). Only
+# requirements explicitly enumerated in an existing ADR's own "GDD
+# Requirements Addressed" table are ID-registered so far — the 7 systems
+# with no ADR yet (Input Abstraction, Tending Input, Time & Drift,
+# Creature Behavior, Persistence/Save, Discovery Surfacing's reveal-queue
+# half, Diorama Rendering, Ambient Audio) are NOT yet ID-registered.
+# Minting IDs for un-ADR'd requirements now would risk needing to renumber
+# once each system's real ADR tightens the requirement wording against an
+# actual decision — see architecture-review-2026-08-10.md's Scoping Note.
+#
+# UPDATED by the second /architecture-review pass (2026-08-10, same date —
+# see architecture-review-2026-08-10-2.md). ADR-0005/0006/0007 now exist,
+# so Persistence/Save, Time & Drift, and Creature Behavior are ID-registered
+# below. Also added TR-crosscutting-003 for the SessionBootstrap
+# restore-write-path gap (Conflict 1 in the second-pass report) — this is a
+# real, currently-unmet requirement, not a deprecated one. Input Abstraction,
+# Tending Input, Discovery Surfacing's reveal-queue half, Diorama Rendering,
+# and Ambient Audio remain un-ID-registered — still no ADR for any of them.
+#
+# UPDATED by the third /architecture-review pass (2026-08-10, same date —
+# see architecture-review-2026-08-10-3.md). ADR-0008/0009/0010 now exist, so
+# Input Abstraction, Diorama Rendering, and Discovery Surfacing's
+# reveal-queue half are ID-registered below (TR-crosscutting-002, the
+# snapshot half, was already registered in pass 1). TR-crosscutting-003
+# (SessionBootstrap restore-write-path) remains open and unresolved — a
+# third consecutive pass confirmed none of its 6 broken method calls were
+# fixed. Tending Input and Ambient Audio still have no ADR and remain
+# un-ID-registered.
+#
+# CONFIRMED by the fourth /architecture-review pass (2026-08-11 — see
+# architecture-review-2026-08-11.md). No new ADRs were written since pass 3,
+# so no new TR-IDs are minted this pass. TR-crosscutting-003's requirement
+# text is unchanged (IDs are permanent regardless of resolution status), but
+# the underlying gap it names is now RESOLVED — ADR-0002 was revised and
+# verified consistent with every downstream ADR's own Key Interfaces. See
+# the traceability index for the per-requirement status change. Tending
+# Input and Ambient Audio still have no ADR and remain un-ID-registered.
+#
+# UPDATED by the fifth /architecture-review pass (2026-08-11, same day —
+# see architecture-review-2026-08-11-2.md). ADR-0011 (Tending Input) and
+# ADR-0012 (Ambient Audio) now exist, closing the last two un-ADR'd MVP
+# systems. 13 new TR-IDs minted below: TR-tending-input-001..006 (all
+# Covered) and TR-ambient-audio-001..007 (5 Covered, 2 Partial — UI control
+# construction deferred to a future /ux-design pass, Gate D verification
+# deferred to a future browser test). All five companion-edit claims these
+# two ADRs make against ADR-0003/0004/0005/0009 were independently verified
+# present in each target ADR's own file — first fully clean companion-edit
+# batch in this project's history.
+
+requirements:
+  - id: TR-content-data-001
+    system: content-data
+    gdd: design/gdd/content-data.md
+    requirement: "Authoring format decision — .tres vs JSON/CSV"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-content-data-002
+    system: content-data
+    gdd: design/gdd/content-data.md
+    requirement: "Core Rule 1 — unique string id, never referenced by file path from gameplay code"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-content-data-003
+    system: content-data
+    gdd: design/gdd/content-data.md
+    requirement: "Core Rule 2 — visual_stages/required_ids implemented as Array[String], not PackedStringArray"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-content-data-004
+    system: content-data
+    gdd: design/gdd/content-data.md
+    requirement: "definition_validity must run before a definition is admitted to the registry"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-content-data-005
+    system: content-data
+    gdd: design/gdd/content-data.md
+    requirement: "Deterministic, ordinally-sorted res:// path collection; never resolve via uid://"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-crosscutting-001
+    system: crosscutting
+    gdd: design/gdd/systems-index.md
+    requirement: "No formal inter-system communication convention existed (event bus vs. direct call vs. signal)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-crosscutting-002
+    system: crosscutting
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "No owner existed for Discovery Surfacing's pre-batch snapshot or the 11-step session-start sequence"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-object-placement-001
+    system: object-placement
+    gdd: design/gdd/object-placement.md
+    requirement: "Formulas — footprint hit-test, in-bounds ellipse, pairwise overlap, drag-follow position"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-object-placement-002
+    system: object-placement
+    gdd: design/gdd/object-placement.md
+    requirement: "No Area2D/CollisionShape2D/physics engine for 2D placement collision"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-object-placement-003
+    system: object-placement
+    gdd: design/gdd/object-placement.md
+    requirement: "grab_offset preserved for the duration of a drag"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-object-placement-004
+    system: object-placement
+    gdd: design/gdd/object-placement.md
+    requirement: "ObjectTypeDef.footprint_size/repositionable fields consumed from Content Data"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-object-placement-005
+    system: object-placement
+    gdd: design/gdd/object-placement.md
+    requirement: "get_position(object_id)/is_held(object_id) public API boundaries"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-object-placement-006
+    system: object-placement
+    gdd: design/gdd/object-placement.md
+    requirement: "Diorama Rendering reads committed/live visual_pos, HELD state, drag_end outcome"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-ecosystem-simulation-001
+    system: ecosystem-simulation
+    gdd: design/gdd/ecosystem-simulation.md
+    requirement: "Formulas — jar moisture (watering + decay), light triangle wave, three-state plant growth, spawn/departure debounce, detail-event gate"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-ecosystem-simulation-002
+    system: ecosystem-simulation
+    gdd: design/gdd/ecosystem-simulation.md
+    requirement: "should_trigger_detail(roll, p_detail) must be pure/dependency-injected, not read engine RNG directly"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-ecosystem-simulation-003
+    system: ecosystem-simulation
+    gdd: design/gdd/ecosystem-simulation.md
+    requirement: "Core Rule 11 — plants evaluated before creatures, every tick, within one advance_tick() call"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-ecosystem-simulation-004
+    system: ecosystem-simulation
+    gdd: design/gdd/ecosystem-simulation.md
+    requirement: "Core Rule 12/13 — last_known_position and was_present_during_batch per-creature tracking"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-ecosystem-simulation-005
+    system: ecosystem-simulation
+    gdd: design/gdd/ecosystem-simulation.md
+    requirement: "Pure state owner — exposes state to five downstream systems, calls into none"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-crosscutting-003
+    system: crosscutting
+    gdd: design/gdd/systems-index.md
+    requirement: "SessionBootstrap needs a public, ADR-declared write path into every system it restores state into — as written, ADR-0002's pseudocode calls 6 methods across 5 other ADRs, none of which are declared in the owning ADR's own Key Interfaces (see architecture-review-2026-08-10-2.md Conflict 1)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-persistence-save-001
+    system: persistence-save
+    gdd: design/gdd/persistence-save.md
+    requirement: "Save blob schema — full field list (Core Rule 1)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-persistence-save-002
+    system: persistence-save
+    gdd: design/gdd/persistence-save.md
+    requirement: "save_blob_validity gate — all-or-nothing validation, evaluation order, two-tier last-known-good fallback"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-persistence-save-003
+    system: persistence-save
+    gdd: design/gdd/persistence-save.md
+    requirement: "Web storage backend and write reliability at session end/backgrounding (Core Rule 5)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-persistence-save-004
+    system: persistence-save
+    gdd: design/gdd/persistence-save.md
+    requirement: "Cross-system restore sequencing/API — how Ecosystem Simulation/Object Placement actually receive restored state"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-persistence-save-005
+    system: persistence-save
+    gdd: design/gdd/persistence-save.md
+    requirement: "No periodic autosave / gesture-triggered mirror refresh (AC11)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-persistence-save-006
+    system: persistence-save
+    gdd: design/gdd/persistence-save.md
+    requirement: "Save-confirmation cue signal, cross-system to Diorama Rendering (Core Rule 8)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-persistence-save-007
+    system: persistence-save
+    gdd: design/gdd/persistence-save.md
+    requirement: "Non-Web/editor dev fallback persistence path"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-persistence-save-008
+    system: persistence-save
+    gdd: design/gdd/persistence-save.md
+    requirement: "Storage size/performance budget"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-time-drift-001
+    system: time-drift
+    gdd: design/gdd/time-drift.md
+    requirement: "Tick-batching/catch-up model (Core Rules 2-6)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-time-drift-002
+    system: time-drift
+    gdd: design/gdd/time-drift.md
+    requirement: "last_visit_timestamp update semantics at session boundaries (Core Rule 8)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-time-drift-003
+    system: time-drift
+    gdd: design/gdd/time-drift.md
+    requirement: "Cosmetic day_night_phase computation (Core Rule 7)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-time-drift-004
+    system: time-drift
+    gdd: design/gdd/time-drift.md
+    requirement: "SessionBootstrap integration/init ordering"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-time-drift-005
+    system: time-drift
+    gdd: design/gdd/time-drift.md
+    requirement: "State machine exposure to dependents (get_state() consumed by Creature Behavior)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-time-drift-006
+    system: time-drift
+    gdd: design/gdd/time-drift.md
+    requirement: "Unix-timestamp float/int type safety (Time.get_unix_time_from_system() returns float)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-time-drift-007
+    system: time-drift
+    gdd: design/gdd/time-drift.md
+    requirement: "bfcache/pageshow reload-guard dependency on ADR-0005's JS layer"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-creature-behavior-001
+    system: creature-behavior
+    gdd: design/gdd/creature-behavior.md
+    requirement: "Wander state machine and per-instance data structure (Core Rules 1-7)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-creature-behavior-002
+    system: creature-behavior
+    gdd: design/gdd/creature-behavior.md
+    requirement: "PRESENT/ABSENT transition detection mechanism, respecting Ecosystem Simulation's never-calls-outward guarantee"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-creature-behavior-003
+    system: creature-behavior
+    gdd: design/gdd/creature-behavior.md
+    requirement: "Session-start entry / Core Rule 8 CATCHING_UP-suppression (AC15/15a)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-creature-behavior-004
+    system: creature-behavior
+    gdd: design/gdd/creature-behavior.md
+    requirement: "Movement/destination-sampling/pause-duration pure formulas"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-creature-behavior-005
+    system: creature-behavior
+    gdd: design/gdd/creature-behavior.md
+    requirement: "set_last_known_position() write-only call into Ecosystem Simulation every frame (Core Rule 9)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-creature-behavior-006
+    system: creature-behavior
+    gdd: design/gdd/creature-behavior.md
+    requirement: "Per-frame diff-poll performance budget at MVP scale (2 creatures)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-creature-behavior-007
+    system: creature-behavior
+    gdd: design/gdd/creature-behavior.md
+    requirement: "Object Placement footprint read as movement obstacle (soft dependency)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-input-abstraction-001
+    system: input-abstraction
+    gdd: design/gdd/input-abstraction.md
+    requirement: "Core Rules 1-3 — raw event capture at single entry point, translation into 4 gesture events (tap/drag_start/drag_move/drag_end), tap-vs-drag distance classification"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-input-abstraction-002
+    system: input-abstraction
+    gdd: design/gdd/input-abstraction.md
+    requirement: "Core Rule 4 — true jar-local coordinate conversion on every gesture event, robust to a future non-identity jar transform"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-input-abstraction-003
+    system: input-abstraction
+    gdd: design/gdd/input-abstraction.md
+    requirement: "Core Rules 5/7 — single-active-pointer arbitration; ignored second touch point never inherits state; mouse/touch dedup"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-input-abstraction-004
+    system: input-abstraction
+    gdd: design/gdd/input-abstraction.md
+    requirement: "Core Rule 7a — same-device_id re-press treated as implicit release-then-press, with canceled=true if DRAGGING"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-input-abstraction-005
+    system: input-abstraction
+    gdd: design/gdd/input-abstraction.md
+    requirement: "Core Rule 8 — pointer interruption (focus_exited/entered) forces IDLE, fires drag_end(canceled=true) if DRAGGING"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-input-abstraction-006
+    system: input-abstraction
+    gdd: design/gdd/input-abstraction.md
+    requirement: "Open Questions [BLOCKING] — empirical verification of Web-export focus/touch-dedup behavior before Object Placement/Tending Input lock-in"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-input-abstraction-007
+    system: input-abstraction
+    gdd: design/gdd/input-abstraction.md
+    requirement: "Signal contract formalization (tap/drag_start/drag_move/drag_end exact shape) consumed by Object Placement and Tending Input"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-001
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 1 — pure read-only observer, zero upstream mutation"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-002
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rules 2/2a/10 — discrete stage rendering (no cross-fade), Catch-up Growth Reveal, growth_pattern silhouette scaling"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-003
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 3 — mandated per-plant STALLED cue, evaluated every frame"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-004
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 4 — repositionable object rendering (HELD live-follow vs. committed position)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-005
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 5 — live creature position rendering every frame while PRESENT"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-006
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 6 — snap-back/wobble as eased tweens, kill-and-restart retrigger policy"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-007
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 7 — Discovery Surfacing cue execution, per-category Light2D lifecycle (create on activate, free on end)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-008
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 8 — day/night CanvasModulate, cosmetic-only, never gated"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-009
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 9 — fully-resolved first frame, no loading/placeholder state"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-010
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Core Rule 11 — Watering Substrate Sheen (substrate self_modulate tween + ambient sun Light2D energy boost, shared envelope with Ambient Audio)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-011
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "Open Question 1 [BLOCKING] — Compatibility-renderer 2D lighting (Light2D/normal-map/glow) verification, C1/C4 gates"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-diorama-rendering-012
+    system: diorama-rendering
+    gdd: design/gdd/diorama-rendering.md
+    requirement: "register_jar() cross-ADR wiring — JarRoot is the same node ADR-0008 expects"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-001
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Core Rule 1 — delta set computed exactly once, at CATCHING_UP to ACTIVE transition"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-002
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Core Rules 2/3 — 4-category item classification, first-session empty-delta case"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-003
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Core Rule 2a — full_cycle exception (spawn-then-departure entirely within one batch)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-004
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Core Rules 4/4a — staggered/overlapping activation timing, focus-pause on backgrounding"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-005
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Core Rules 5/6 — per-element cue target, fixed fade duration with no acknowledgment tracking"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-006
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Core Rule 7 — Departure position source (last_known_position, or (0,0) default for full_cycle)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-007
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Core Rule 8 — deterministic queue ordering (category tier + registration-index tie-break)"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-008
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Core Rule 9 — never blocks/gates gameplay input"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-009
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "get_active_items() interface ratification for Diorama Rendering"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-discovery-surfacing-010
+    system: discovery-surfacing
+    gdd: design/gdd/discovery-surfacing.md
+    requirement: "Tuning Knobs — pacing_delay/cue_fade_duration must be data-driven, not hardcoded"
+    created: 2026-08-10
+    revised: ""
+    status: active
+
+  - id: TR-tending-input-001
+    system: tending-input
+    gdd: design/gdd/tending-input.md
+    requirement: "Core Rule 1 — tap in jar bounds, not on any object footprint, triggers watering"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-tending-input-002
+    system: tending-input
+    gdd: design/gdd/tending-input.md
+    requirement: "Core Rules 2/3 — apply_watering called exactly once, no batching, no call_deferred/await/CONNECT_DEFERRED anywhere in the tap->water->cue chain"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-tending-input-003
+    system: tending-input
+    gdd: design/gdd/tending-input.md
+    requirement: "Core Rule 4 — stateless, no cooldown, every tap handled identically and independently"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-tending-input-004
+    system: tending-input
+    gdd: design/gdd/tending-input.md
+    requirement: "AC1 — watering_amount read from Ecosystem Simulation's configured value, never hardcoded/redefined here"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-tending-input-005
+    system: tending-input
+    gdd: design/gdd/tending-input.md
+    requirement: "Edge Cases — no-objects-placed degrades gracefully; boundary-inclusive/overlapping footprint exclusion, no error"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-tending-input-006
+    system: tending-input
+    gdd: design/gdd/tending-input.md
+    requirement: "Structural init-order guarantee — input handling not enabled before Ecosystem Simulation has finished initializing"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-ambient-audio-001
+    system: ambient-audio
+    gdd: design/gdd/ambient-audio.md
+    requirement: "Core Rule 1/1a — zero-delay session-start play(), PENDING_GESTURE browser-autoplay-policy handling"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-ambient-audio-002
+    system: ambient-audio
+    gdd: design/gdd/ambient-audio.md
+    requirement: "Core Rules 3/4 — reactive layer triggers (watering notification signal, discovery-cue polling, category-weighted)"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-ambient-audio-003
+    system: ambient-audio
+    gdd: design/gdd/ambient-audio.md
+    requirement: "Core Rule 7 — persisted ambient_volume/muted, read at session start, written on control interaction"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-ambient-audio-004
+    system: ambient-audio
+    gdd: design/gdd/ambient-audio.md
+    requirement: "Formulas — dB math/fade envelope/reactive boosts as pure functions, t passed as an explicit parameter"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-ambient-audio-005
+    system: ambient-audio
+    gdd: design/gdd/ambient-audio.md
+    requirement: "Core Rule 6 — never blocks or gates gameplay input regardless of audio/AudioServer state"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-ambient-audio-006
+    system: ambient-audio
+    gdd: design/gdd/ambient-audio.md
+    requirement: "UI Requirements — locked mute/volume control box (fixed corner, <=4% viewport, persistent visibility, >=44x44px hit area, diegetic-adjacent styling)"
+    created: 2026-08-11
+    revised: ""
+    status: active
+
+  - id: TR-ambient-audio-007
+    system: ambient-audio
+    gdd: design/gdd/ambient-audio.md
+    requirement: "Recommended Gate D — pre-gesture play() catch-up behavior, empirically unverified"
+    created: 2026-08-11
+    revised: ""
+    status: active
 
 # --- EXAMPLE ENTRIES (remove when first real entries are added) ---
 #
