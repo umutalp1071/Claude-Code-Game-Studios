@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PlantTypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/content/plant_type_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "moss"
+display_name = "Moss"
+moisture_tolerance_min = 40
+moisture_tolerance_max = 75
+light_tolerance_min = 20
+light_tolerance_max = 60
+growth_rate = 1
+decay_rate = 2
+growth_pattern = "carpet"
+visual_stages = Array[String](["moss_dormant", "moss_sprout", "moss_patch", "moss_dense", "moss_full"])

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CreatureTypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/content/creature_type_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "moth"
+display_name = "Moth"
+required_ids = Array[String](["flower", "snail"])
+movement_speed = 14.0
+pause_duration_min = 1.5
+pause_duration_max = 3.0
+visual_ref = "moth_default"

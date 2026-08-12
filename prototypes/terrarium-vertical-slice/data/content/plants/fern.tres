@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PlantTypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/content/plant_type_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fern"
+display_name = "Fern"
+moisture_tolerance_min = 55
+moisture_tolerance_max = 90
+light_tolerance_min = 40
+light_tolerance_max = 80
+growth_rate = 1
+decay_rate = 1
+growth_pattern = "clump"
+visual_stages = Array[String](["fern_dormant", "fern_shoot", "fern_frond1", "fern_frond2", "fern_frond3", "fern_lush", "fern_full"])

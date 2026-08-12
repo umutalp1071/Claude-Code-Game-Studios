@@ -1,0 +1,46 @@
+; VERTICAL SLICE - NOT FOR PRODUCTION
+; Validation Question: Does a player experience the calm caretaker fantasy —
+; noticing what changed, tending the jar, and seeing a session boundary
+; produce visible drift — within 5 minutes, without guidance?
+; Date: 2026-08-12
+;
+; Engine configuration file. Best edited via the editor UI; hand-authored
+; here since no Godot binary is available in the authoring environment —
+; see README.md "Known Risks".
+
+config_version=5
+
+[application]
+
+config/name="Terrarium Vertical Slice"
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+
+ContentData="*res://scripts/autoload/content_data.gd"
+InputAbstraction="*res://scripts/autoload/input_abstraction.gd"
+ObjectPlacement="*res://scripts/autoload/object_placement.gd"
+EcosystemSimulation="*res://scripts/autoload/ecosystem_simulation.gd"
+TendingInput="*res://scripts/autoload/tending_input.gd"
+TimeDrift="*res://scripts/autoload/time_drift.gd"
+CreatureBehavior="*res://scripts/autoload/creature_behavior.gd"
+DiscoverySurfacing="*res://scripts/autoload/discovery_surfacing.gd"
+AmbientAudio="*res://scripts/autoload/ambient_audio.gd"
+SessionBootstrap="*res://scripts/autoload/session_bootstrap.gd"
+
+[display]
+
+window/size/viewport_width=960
+window/size/viewport_height=600
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=false
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

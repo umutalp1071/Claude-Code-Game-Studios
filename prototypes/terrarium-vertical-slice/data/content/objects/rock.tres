@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ObjectTypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/content/object_type_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rock"
+display_name = "Rock"
+visual_ref = "rock_default"
+repositionable = true
+footprint_size = 8.0

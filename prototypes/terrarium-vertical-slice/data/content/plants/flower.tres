@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PlantTypeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/content/plant_type_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "flower"
+display_name = "Flower"
+moisture_tolerance_min = 60
+moisture_tolerance_max = 90
+light_tolerance_min = 55
+light_tolerance_max = 95
+growth_rate = 2
+decay_rate = 1
+growth_pattern = "climb"
+visual_stages = Array[String](["flower_dormant", "flower_bud", "flower_bloom_partial", "flower_bloom_full"])
