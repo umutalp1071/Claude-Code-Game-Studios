@@ -13,3 +13,9 @@ Complete history of concept prototypes and spikes: what was tried, what was lear
 | Spike | Date | Path | Status | Report |
 |-------|------|------|--------|--------|
 | Web Export Verification (Gates A/B/C — input, persistence, rendering) | 2026-08-10 | Godot | In progress — built, not yet run | [README.md](web-export-spike/README.md), full plan/results at `docs/technical-setup/web-export-verification-plan.md` |
+
+## Vertical Slices
+
+| Concept | Date | Run | Path | Verdict | Report |
+|---------|------|-----|------|---------|--------|
+| Terrarium | 2026-08-12 | First run | Godot | PROCEED | [REPORT.md](terrarium-vertical-slice/REPORT.md) |
