@@ -2,15 +2,30 @@
 
 ## Overview
 
-- **Target Date**: **TBD — not yet committed.** `design/gdd/game-concept.md`'s own Scope Tiers table
-  explicitly defers this: "Rebaselined 2026-08-09: pending `/estimate` against Technical Setup
-  epics/stories — 11 MVP systems are now fully specified (vs. the pre-design '2-4 weeks' guess), so
-  this figure is no longer load-bearing." Run `/estimate` once epics/stories exist (after this
-  milestone's own scoping work below) and fill in a real date then — not before. A fabricated date
-  here would be worse than an honest TBD.
+- **Target Date**: **2026-09-10 (Must-Ship completion), projected — not a hard commitment.**
+  Derived 2026-08-12 from a real `/estimate` pass against Foundation+Core epics (Content Data,
+  Input Abstraction, Object Placement, Ecosystem Simulation — 12.0 expected days) plus a
+  lighter complexity-based sizing pass against the 3 remaining Must-Ship systems (Tending
+  Input, Time & Drift, Persistence/Save — ~7.0 expected days), using each system's actual
+  GDD acceptance-criteria count and formula complexity, not a T-shirt-size guess.
+  **Deliberately does not reuse `prototypes/terrarium-vertical-slice/REPORT.md`'s own build
+  velocity** — that report explicitly flags itself as AI-authored against pre-specified
+  GDDs and non-representative of human production velocity; using it here would silently
+  reintroduce the exact fabricated-date risk this field was left TBD to avoid.
+  **Assumptions this date depends on** (stated explicitly so they can be checked, not
+  buried): solo full-time dedication, 1 sprint = 5 working days, start date 2026-08-13.
+  Change any of these and this date should be recomputed, not just distrusted.
 - **Type**: Vertical Slice
-- **Duration**: TBD (pending `/estimate`)
-- **Number of Sprints**: TBD (pending `/estimate`)
+- **Duration**: ~19 expected days (Must-Ship, 7 systems) — range 13.0 (optimistic) to
+  29.0 (pessimistic) days. Pessimistic case is driven almost entirely by Input Abstraction's
+  unresolved Web-export verification gap (TR-input-abstraction-006) and Persistence/Save's
+  34-AC dual-path (Web/non-Web) surface, not by the other 5 systems.
+- **Number of Sprints**: 4 (Must-Ship, 5 working days/sprint) + 1 stretch sprint if
+  Should-Ship items (Creature Behavior, Discovery Surfacing, Ambient Audio — ~6.5 expected
+  days combined) are also attempted. Diorama Rendering (Stretch tier) is deliberately
+  **not** sprint-assigned — still blocked on Gate C4 per the 2026-08-12 gate-check
+  (`production/gate-checks/pre-production-to-production-2026-08-12.md`), which found Gate
+  C4 has never produced a real frame-budget measurement on any device.
 
 ## Milestone Goal
 
@@ -61,21 +76,34 @@ rather than introducing new systems."
 
 | Feature | Design Doc | Owner | Sprint Target | Status |
 |---------|-----------|-------|--------------|--------|
-| Content Data (type registry) | `content-data.md` | ADR-0001 (Accepted) | TBD | Not started |
-| Input Abstraction (gesture layer) | `input-abstraction.md` | ADR-0008 (Accepted) | TBD | Not started — blocked on RISK-0001 |
-| Object Placement (repositioning) | `object-placement.md` | ADR-0003 (Accepted) | TBD | Not started |
-| Ecosystem Simulation (moisture/light/growth) | `ecosystem-simulation.md` | ADR-0004 (Accepted) | TBD | Not started — 1 real test exists (`EcosystemFormulas.moisture_after_watering`), rest unimplemented |
-| Tending Input (watering) | `tending-input.md` | ADR-0011 (Accepted) | TBD | Not started |
-| Time & Drift (session lifecycle) | `time-drift.md` | ADR-0006 (Accepted) | TBD | Not started |
-| Persistence/Save | `persistence-save.md` | ADR-0005 (Accepted) | TBD | Not started — blocked on RISK-0002 for full confidence, ships on Chromium-verified design regardless |
+| Content Data (type registry) | `content-data.md` | ADR-0001 (Accepted) | Sprint 1 | Not started |
+| Input Abstraction (gesture layer) | `input-abstraction.md` | ADR-0008 (Accepted) | Sprint 1 | Not started — blocked on RISK-0001 |
+| Object Placement (repositioning) | `object-placement.md` | ADR-0003 (Accepted) | Sprint 2 | Not started |
+| Ecosystem Simulation (moisture/light/growth) | `ecosystem-simulation.md` | ADR-0004 (Accepted) | Sprint 2 | Not started — 1 real test exists (`EcosystemFormulas.moisture_after_watering`), rest unimplemented |
+| Tending Input (watering) | `tending-input.md` | ADR-0011 (Accepted) | Sprint 3 | Not started |
+| Time & Drift (session lifecycle) | `time-drift.md` | ADR-0006 (Accepted) | Sprint 3 | Not started |
+| Persistence/Save | `persistence-save.md` | ADR-0005 (Accepted) | Sprint 4 | Not started — blocked on RISK-0002 for full confidence, ships on Chromium-verified design regardless |
+
+Sprint targets follow `systems-index.md`'s own Recommended Design Order (dependency-safe:
+Content Data/Input Abstraction have no upstream dependencies; Object Placement/Ecosystem
+Simulation depend only on those two; Tending Input/Time & Drift depend on Ecosystem
+Simulation; Persistence/Save depends on all of the above). Sprint 1's combined estimate
+(5.5 expected days: Content Data 2.0 + Input Abstraction 3.5) slightly exceeds one 5-day
+sprint — expected to spill a half-day into Sprint 2, not a scoping error.
 
 ### Should Ship (Planned but Cuttable)
 
 | Feature | Design Doc | Owner | Sprint Target | Cut Impact | Status |
 |---------|-----------|-------|--------------|-----------|--------|
-| Creature Behavior (Snail/Moth wander) | `creature-behavior.md` | ADR-0007 (Accepted) | TBD | Jar reads as less alive; Ecosystem Simulation's PRESENT/ABSENT state still works without live movement | Not started |
-| Discovery Surfacing (what-changed reveal) | `discovery-surfacing.md` | ADR-0002 + ADR-0010 (both Accepted) | TBD | Loses the primary vehicle for the falsifiable hypothesis above — cutting this cuts the milestone's own validation goal, weigh carefully | Not started |
-| Ambient Audio | `ambient-audio.md` | ADR-0012 (Accepted) | TBD | Loses half the "Sensation" co-primary aesthetic; Diorama Rendering alone still carries the visual half | Not started |
+| Creature Behavior (Snail/Moth wander) | `creature-behavior.md` | ADR-0007 (Accepted) | Sprint 5 (stretch, ~2.5d) | Jar reads as less alive; Ecosystem Simulation's PRESENT/ABSENT state still works without live movement | Not started |
+| Discovery Surfacing (what-changed reveal) | `discovery-surfacing.md` | ADR-0002 + ADR-0010 (both Accepted) | Sprint 5 (stretch, ~2.0d) | Loses the primary vehicle for the falsifiable hypothesis above — cutting this cuts the milestone's own validation goal, weigh carefully | Not started |
+| Ambient Audio | `ambient-audio.md` | ADR-0012 (Accepted) | Sprint 5 (stretch, ~2.0d) | Loses half the "Sensation" co-primary aesthetic; Diorama Rendering alone still carries the visual half | Not started |
+
+Should-Ship sizing (~6.5 expected days combined) is a lighter complexity pass, not a full
+`/estimate` run each — re-run `/estimate` per-system before Sprint 5 actually starts if more
+precision is needed. Given Discovery Surfacing is explicitly the milestone's own primary
+validation vehicle (Success Criteria above), treat it as the highest-priority of the three
+Should-Ship items if Sprint 5 capacity is constrained.
 
 ### Stretch Goals (Only if Ahead of Schedule)
 
@@ -125,5 +153,24 @@ Full entries live in `production/risk-register/` — summarized here per this te
 
 ## Review Schedule
 
-TBD — depends on the sprint count `/estimate` produces. Populate once `/sprint-plan new` has run
-against real epics/stories.
+End of each sprint (weekly, ~5 working days), against that sprint's assigned features above:
+- **End of Sprint 1**: Content Data + Input Abstraction implemented and unit-tested; confirm
+  Gate A (touch hardware) access decision is made per RISK-0001 before Sprint 2 needs it.
+- **End of Sprint 2**: Object Placement + Ecosystem Simulation implemented and unit-tested —
+  this is the project's single highest-risk system (per `systems-index.md`'s High-Risk
+  Systems table); do not proceed to Sprint 3 without its formula tests passing.
+- **End of Sprint 3**: Tending Input + Time & Drift implemented; cross-system integration
+  smoke test (all 4 Sprint 1-2 systems + these 2 wired together via a `SessionBootstrap`-
+  equivalent) run for the first time.
+- **End of Sprint 4 (Must-Ship complete)**: Persistence/Save implemented; formal milestone
+  review — re-run `/gate-check pre-production` at this point, since this is when the
+  gate's other named blocker (real dates) will have been exercised end-to-end. Decide then
+  whether Sprint 5 (Should-Ship) proceeds or the milestone closes with Must-Ship only.
+- **End of Sprint 5 (if attempted)**: Creature Behavior + Discovery Surfacing + Ambient Audio.
+  Re-run the vertical-slice playtest at this point if any real Diorama Rendering art has
+  landed by then — this is the earliest point the unretired core-fantasy hypothesis
+  (`prototypes/terrarium-vertical-slice/REPORT.md`) could be legitimately re-tested.
+
+**Not covered by this schedule**: Diorama Rendering (Stretch, blocked on Gate C4 — no sprint
+assigned per the Overview above). Gate C4 measurement should happen in parallel with Sprints
+1-4, not block them, per Technical Director's finding at the 2026-08-12 gate-check.
